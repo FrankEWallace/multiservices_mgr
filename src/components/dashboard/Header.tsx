@@ -1,5 +1,6 @@
-import { Bell, Search, Calendar, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { Bell, Search, Calendar, Sun, Moon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import {
   Select,
   SelectContent,
@@ -8,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const services = [
   "All Services",
@@ -30,6 +32,12 @@ const dateRanges = [
 export function Header() {
   const [selectedService, setSelectedService] = useState("All Services");
   const [selectedRange, setSelectedRange] = useState("month");
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const isDark = mounted ? theme === "dark" : true;
 
   return (
     <header className="h-16 bg-card/50 backdrop-blur-xl border-b border-border px-6 flex items-center justify-between sticky top-0 z-40">
@@ -73,6 +81,16 @@ export function Header() {
             className="w-64 pl-10 bg-secondary border-border"
           />
         </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="rounded-lg"
+          aria-label="Toggle theme"
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+        >
+          {isDark ? <Sun /> : <Moon />}
+        </Button>
         <button className="relative p-2 rounded-lg hover:bg-secondary transition-colors">
           <Bell className="w-5 h-5 text-muted-foreground" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full" />
