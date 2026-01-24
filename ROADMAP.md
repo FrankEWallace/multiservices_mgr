@@ -42,7 +42,7 @@ Meilleur Insights is a comprehensive business intelligence dashboard for managin
 - [x] Configure environment variables
 - [x] Set up SQLite database
 - [x] Configure Drizzle ORM
-- [ ] Set up database migrations
+- [x] Set up database migrations
 - [x] Create base error handling
 
 #### 1.2 Database Schema
@@ -53,7 +53,7 @@ Meilleur Insights is a comprehensive business intelligence dashboard for managin
 - [x] Madeni table (debt management)
 - [x] Goals table (targets)
 - [x] Transactions table (all financial records)
-- [ ] Settings table (app configuration)
+- [x] Settings table (app configuration)
 
 #### 1.3 Authentication
 - [x] User registration endpoint

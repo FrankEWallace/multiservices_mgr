@@ -10,6 +10,7 @@ import servicesRoutes from "./routes/services";
 import revenueRoutes from "./routes/revenue";
 import madeniRoutes from "./routes/madeni";
 import goalsRoutes from "./routes/goals";
+import settingsRoutes from "./routes/settings";
 
 const app = new Hono();
 
@@ -40,6 +41,7 @@ app.route("/api/services", servicesRoutes);
 app.route("/api/revenue", revenueRoutes);
 app.route("/api/madeni", madeniRoutes);
 app.route("/api/goals", goalsRoutes);
+app.route("/api/settings", settingsRoutes);
 
 // 404 handler
 app.notFound((c) => {

@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, services, revenues, expenses, madenis, goals } from "./schema";
+import { users, services, revenues, expenses, madenis, goals, settings } from "./schema";
 import bcrypt from "bcryptjs";
 import { sql } from "drizzle-orm";
 
@@ -132,6 +132,21 @@ async function seed() {
     )
   `);
 
+  await db.run(sql`
+    CREATE TABLE IF NOT EXISTS settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      key TEXT NOT NULL UNIQUE,
+      value TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'general',
+      type TEXT NOT NULL DEFAULT 'string',
+      label TEXT,
+      description TEXT,
+      is_public INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Clear existing data
   await db.delete(goals);
   await db.delete(madenis);
@@ -254,6 +269,64 @@ async function seed() {
 
   await db.insert(goals).values(goalsData);
   console.log(`✅ Created ${goalsData.length} goals`);
+
+  // Create default settings
+  const now = new Date().toISOString();
+  const defaultSettings = [
+    // General Settings
+    { key: "app.name", value: "Meilleur Insights", category: "general", type: "string", label: "Application Name", description: "The name displayed in the application header", isPublic: true },
+    { key: "app.tagline", value: "Multi-Service Business Dashboard", category: "general", type: "string", label: "Tagline", description: "Application tagline/subtitle", isPublic: true },
+    { key: "app.timezone", value: "Africa/Dar_es_Salaam", category: "general", type: "string", label: "Timezone", description: "Default timezone for the application" },
+    { key: "app.dateFormat", value: "DD/MM/YYYY", category: "general", type: "string", label: "Date Format", description: "Default date format (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD)" },
+    
+    // Currency Settings
+    { key: "currency.code", value: "TZS", category: "currency", type: "string", label: "Currency Code", description: "ISO 4217 currency code", isPublic: true },
+    { key: "currency.symbol", value: "TSh", category: "currency", type: "string", label: "Currency Symbol", description: "Currency symbol to display", isPublic: true },
+    { key: "currency.position", value: "before", category: "currency", type: "string", label: "Symbol Position", description: "Position of currency symbol (before/after)" },
+    { key: "currency.decimalPlaces", value: "0", category: "currency", type: "number", label: "Decimal Places", description: "Number of decimal places to display" },
+    { key: "currency.thousandsSeparator", value: ",", category: "currency", type: "string", label: "Thousands Separator", description: "Character for thousands separator" },
+    
+    // Appearance Settings
+    { key: "appearance.theme", value: "system", category: "appearance", type: "string", label: "Theme", description: "Application theme (light/dark/system)" },
+    { key: "appearance.primaryColor", value: "#3b82f6", category: "appearance", type: "string", label: "Primary Color", description: "Primary brand color", isPublic: true },
+    { key: "appearance.compactMode", value: "false", category: "appearance", type: "boolean", label: "Compact Mode", description: "Enable compact UI mode" },
+    
+    // Notification Settings
+    { key: "notifications.email", value: "true", category: "notifications", type: "boolean", label: "Email Notifications", description: "Enable email notifications" },
+    { key: "notifications.push", value: "true", category: "notifications", type: "boolean", label: "Push Notifications", description: "Enable push notifications" },
+    { key: "notifications.debtReminders", value: "true", category: "notifications", type: "boolean", label: "Debt Reminders", description: "Send reminders for upcoming debt due dates" },
+    { key: "notifications.goalAlerts", value: "true", category: "notifications", type: "boolean", label: "Goal Alerts", description: "Alert when goals are at risk or achieved" },
+    { key: "notifications.weeklyReport", value: "true", category: "notifications", type: "boolean", label: "Weekly Reports", description: "Send weekly summary reports" },
+    
+    // Reports Settings
+    { key: "reports.defaultPeriod", value: "month", category: "reports", type: "string", label: "Default Period", description: "Default time period for reports (week/month/quarter/year)" },
+    { key: "reports.includeLogo", value: "true", category: "reports", type: "boolean", label: "Include Logo", description: "Include company logo in generated reports" },
+    { key: "reports.companyName", value: "Meilleur Business Services", category: "reports", type: "string", label: "Company Name", description: "Company name for report headers" },
+    { key: "reports.companyAddress", value: "Dar es Salaam, Tanzania", category: "reports", type: "string", label: "Company Address", description: "Company address for reports" },
+    
+    // Business Rules
+    { key: "business.debtOverdueDays", value: "30", category: "business", type: "number", label: "Overdue Days", description: "Days after due date to mark debt as overdue" },
+    { key: "business.fiscalYearStart", value: "01-01", category: "business", type: "string", label: "Fiscal Year Start", description: "Start of fiscal year (MM-DD)" },
+    { key: "business.workingDaysPerWeek", value: "6", category: "business", type: "number", label: "Working Days", description: "Number of working days per week" },
+  ];
+
+  // Clear existing settings
+  await db.delete(settings);
+  
+  for (const setting of defaultSettings) {
+    await db.insert(settings).values({
+      key: setting.key,
+      value: setting.value,
+      category: setting.category,
+      type: setting.type as "string" | "number" | "boolean" | "json",
+      label: setting.label,
+      description: setting.description,
+      isPublic: setting.isPublic ?? false,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+  console.log(`✅ Created ${defaultSettings.length} settings`);
 
   console.log("\n🎉 Database seeded successfully!");
   console.log("\nLogin credentials:");

@@ -118,6 +118,20 @@ export const transactions = sqliteTable("transactions", {
   createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
 });
 
+// ============ SETTINGS ============
+export const settings = sqliteTable("settings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  category: text("category").notNull().default("general"), // general, appearance, notifications, currency, reports
+  type: text("type").notNull().default("string"), // string, number, boolean, json
+  label: text("label"), // Human-readable label
+  description: text("description"),
+  isPublic: integer("is_public", { mode: "boolean" }).default(false), // Can be accessed without auth
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
+});
+
 // ============ RELATIONS ============
 export const servicesRelations = relations(services, ({ many }) => ({
   revenues: many(revenues),
@@ -183,3 +197,5 @@ export type Goal = typeof goals.$inferSelect;
 export type NewGoal = typeof goals.$inferInsert;
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
+export type Setting = typeof settings.$inferSelect;
+export type NewSetting = typeof settings.$inferInsert;

@@ -363,3 +363,56 @@ export interface Goal {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// ============ SETTINGS TYPES ============
+export interface Setting {
+  id: number;
+  key: string;
+  value: string | number | boolean | Record<string, unknown>;
+  category: string;
+  type: "string" | "number" | "boolean" | "json";
+  label?: string;
+  description?: string;
+  isPublic?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SettingsGrouped {
+  [category: string]: Setting[];
+}
+
+// ============ SETTINGS API ============
+export const settingsApi = {
+  // Get all settings (grouped by category)
+  getAll: (category?: string, publicOnly?: boolean): Promise<SettingsGrouped> => {
+    const params = new URLSearchParams();
+    if (category) params.append("category", category);
+    if (publicOnly) params.append("public", "true");
+    const queryString = params.toString();
+    return apiFetch(`/settings${queryString ? `?${queryString}` : ""}`);
+  },
+
+  // Get a single setting by key
+  get: (key: string): Promise<Setting> => apiFetch(`/settings/${key}`),
+
+  // Create or update a setting
+  save: (setting: Omit<Setting, "id" | "createdAt" | "updatedAt">): Promise<Setting> =>
+    apiFetch("/settings", {
+      method: "POST",
+      body: JSON.stringify(setting),
+    }),
+
+  // Bulk update settings
+  bulkUpdate: (settings: Omit<Setting, "id" | "createdAt" | "updatedAt">[]): Promise<Setting[]> =>
+    apiFetch("/settings/bulk", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    }),
+
+  // Delete a setting
+  delete: (key: string): Promise<{ success: boolean }> =>
+    apiFetch(`/settings/${key}`, {
+      method: "DELETE",
+    }),
+};
