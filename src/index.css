@@ -6,7 +6,66 @@
 
 @layer base {
   :root {
-    /* Minimal, low-glare dark palette */
+    /* Light theme (default) */
+    --background: 210 25% 98%;
+    --foreground: 222 20% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 20% 14%;
+    --card-hover: 210 20% 96%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 20% 14%;
+
+    --primary: 160 65% 28%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 160 65% 34%;
+
+    --secondary: 210 18% 94%;
+    --secondary-foreground: 222 20% 14%;
+
+    --muted: 210 18% 94%;
+    --muted-foreground: 215 14% 40%;
+
+    --accent: 160 65% 28%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 160 65% 28%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 90% 44%;
+    --warning-foreground: 222 20% 14%;
+
+    --danger: 0 72% 46%;
+    --danger-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 18% 88%;
+    --input: 214 18% 88%;
+    --ring: 160 65% 28%;
+
+    --radius: 0.6rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 14% 40%;
+    --sidebar-primary: 160 65% 28%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 18% 94%;
+    --sidebar-accent-foreground: 222 20% 14%;
+    --sidebar-border: 214 18% 88%;
+    --sidebar-ring: 160 65% 28%;
+
+    --chart-1: 160 65% 28%;
+    --chart-2: 199 75% 40%;
+    --chart-3: 280 55% 50%;
+    --chart-4: 38 90% 44%;
+    --chart-5: 0 72% 46%;
+  }
+
+  .dark {
+    /* Dark theme overrides */
     --background: 222 20% 7%;
     --foreground: 210 20% 96%;
 
@@ -32,10 +91,10 @@
 
     --success: 160 70% 38%;
     --success-foreground: 210 20% 98%;
-    
+
     --warning: 38 90% 52%;
     --warning-foreground: 222 20% 7%;
-    
+
     --danger: 0 78% 58%;
     --danger-foreground: 210 20% 98%;
 
@@ -46,8 +105,6 @@
     --input: 222 14% 18%;
     --ring: 160 70% 38%;
 
-    --radius: 0.6rem;
-
     --sidebar-background: 222 18% 9%;
     --sidebar-foreground: 215 14% 66%;
     --sidebar-primary: 160 70% 38%;
@@ -57,16 +114,11 @@
     --sidebar-border: 222 14% 18%;
     --sidebar-ring: 160 70% 38%;
 
-    --chart-1: 160 84% 39%;
-    --chart-2: 199 89% 48%;
-    --chart-3: 280 65% 60%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 0 84% 60%;
-  }
-
-  .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --chart-1: 160 70% 38%;
+    --chart-2: 199 75% 48%;
+    --chart-3: 280 55% 60%;
+    --chart-4: 38 90% 52%;
+    --chart-5: 0 78% 58%;
   }
 }
 
