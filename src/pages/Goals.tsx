@@ -1,22 +1,27 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { goalsApi, Goal as GoalType } from "@/lib/api";
 import { GoalForm } from "@/components/forms";
+import { DeleteConfirmation } from "@/components/ui/delete-confirmation";
 import { exportToCSV, goalExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CheckCircle, Target, TrendingUp, Calendar, Plus, Download, Edit2 } from "lucide-react";
+import { CheckCircle, Target, TrendingUp, Calendar, Plus, Download, Edit2, Trash2 } from "lucide-react";
 
 const Goals = () => {
+  const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalType | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingGoal, setDeletingGoal] = useState<GoalType | null>(null);
   const { data: goalsData, isLoading: goalsLoading } = useQuery({
     queryKey: ["goals"],
     queryFn: () => goalsApi.getAll(),
@@ -42,6 +47,31 @@ const Goals = () => {
     setFormOpen(true);
   };
 
+  const handleDelete = (goal: GoalType) => {
+    setDeletingGoal(goal);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => goalsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Goal deleted successfully");
+      setDeleteDialogOpen(false);
+      setDeletingGoal(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete goal");
+    },
+  });
+
+  const confirmDelete = () => {
+    if (deletingGoal) {
+      deleteMutation.mutate(deletingGoal.id);
+    }
+  };
+
   const handleFormClose = (open: boolean) => {
     setFormOpen(open);
     if (!open) setEditingGoal(null);
@@ -65,6 +95,15 @@ const Goals = () => {
   return (
     <DashboardLayout>
       <GoalForm open={formOpen} onOpenChange={handleFormClose} goal={editingGoal} />
+      <DeleteConfirmation
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Goal"
+        itemName={deletingGoal?.title}
+        description={`This will permanently delete the goal "${deletingGoal?.title}". This action cannot be undone.`}
+        isLoading={deleteMutation.isPending}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
@@ -231,13 +270,22 @@ const Goals = () => {
                         </div>
                       </td>
                       <td className="text-right">
-                        <button
-                          onClick={() => handleEdit(goal)}
-                          className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                          title="Edit Goal"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleEdit(goal)}
+                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                            title="Edit Goal"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(goal)}
+                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-danger transition-colors"
+                            title="Delete Goal"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

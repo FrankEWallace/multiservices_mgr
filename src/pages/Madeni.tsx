@@ -1,11 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { debtsApi, Debt } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MadeniForm, PaymentForm } from "@/components/forms";
+import { DeleteConfirmation } from "@/components/ui/delete-confirmation";
 import { exportToCSV, madeniExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -19,16 +21,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Filter, Download, Phone, DollarSign, Edit2 } from "lucide-react";
+import { Plus, Filter, Download, Phone, DollarSign, Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const Madeni = () => {
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [paymentFormOpen, setPaymentFormOpen] = useState(false);
   const [editingMadeni, setEditingMadeni] = useState<Debt | null>(null);
   const [paymentMadeni, setPaymentMadeni] = useState<Debt | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingMadeni, setDeletingMadeni] = useState<Debt | null>(null);
 
   const { data: madeniData, isLoading: madeniLoading } = useQuery({
     queryKey: ["debts"],
@@ -65,6 +70,31 @@ const Madeni = () => {
     setPaymentFormOpen(true);
   };
 
+  const handleDelete = (madeni: Debt) => {
+    setDeletingMadeni(madeni);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => debtsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["debts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Debtor deleted successfully");
+      setDeleteDialogOpen(false);
+      setDeletingMadeni(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete debtor");
+    },
+  });
+
+  const confirmDelete = () => {
+    if (deletingMadeni) {
+      deleteMutation.mutate(deletingMadeni.id);
+    }
+  };
+
   const handleFormClose = (open: boolean) => {
     setFormOpen(open);
     if (!open) setEditingMadeni(null);
@@ -89,6 +119,15 @@ const Madeni = () => {
     <DashboardLayout>
       <MadeniForm open={formOpen} onOpenChange={handleFormClose} madeni={editingMadeni} />
       <PaymentForm open={paymentFormOpen} onOpenChange={setPaymentFormOpen} madeni={paymentMadeni} />
+      <DeleteConfirmation
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Debtor"
+        itemName={deletingMadeni?.debtorName}
+        description={`This will permanently delete "${deletingMadeni?.debtorName}" with a balance of $${deletingMadeni?.balance?.toLocaleString() || 0}. This action cannot be undone.`}
+        isLoading={deleteMutation.isPending}
+      />
       
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -240,6 +279,13 @@ const Madeni = () => {
                           title="Edit"
                         >
                           <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(debtor)}
+                          className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-danger transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                         {debtor.debtorContact && (
                           <button className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary transition-colors" title="Call">

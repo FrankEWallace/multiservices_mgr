@@ -1,16 +1,20 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { servicesApi, ServiceWithStats } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ServiceForm } from "@/components/forms";
+import { DeleteConfirmation } from "@/components/ui/delete-confirmation";
+import { ServiceDetailDialog } from "@/components/dashboard/ServiceDetailDialog";
 import { exportToCSV, serviceExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   PieChart,
@@ -19,7 +23,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Building2, Truck, Package, Home, Wheat, ShoppingCart, Hammer, Plus, Download, Edit2 } from "lucide-react";
+import { Building2, Truck, Package, Home, Wheat, ShoppingCart, Hammer, Plus, Download, Edit2, Trash2, Eye, MoreVertical } from "lucide-react";
 
 const iconMap: Record<string, React.ReactNode> = {
   truck: <Truck className="w-5 h-5 text-primary" />,
@@ -40,13 +44,32 @@ const colorMap: Record<string, string> = {
 };
 
 const Services = () => {
+  const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editingService, setEditingService] = useState<ServiceWithStats | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingService, setDeletingService] = useState<ServiceWithStats | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [viewingService, setViewingService] = useState<ServiceWithStats | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["services"],
     queryFn: servicesApi.getAll,
     staleTime: 60000,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => servicesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Service deleted successfully");
+      setDeleteDialogOpen(false);
+      setDeletingService(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete service");
+    },
   });
 
   const services = data?.services || [];
@@ -64,6 +87,22 @@ const Services = () => {
   const handleEdit = (service: ServiceWithStats) => {
     setEditingService(service);
     setFormOpen(true);
+  };
+
+  const handleDelete = (service: ServiceWithStats) => {
+    setDeletingService(service);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleViewDetails = (service: ServiceWithStats) => {
+    setViewingService(service);
+    setDetailDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingService) {
+      deleteMutation.mutate(deletingService.id);
+    }
   };
 
   const handleFormClose = (open: boolean) => {
@@ -89,6 +128,20 @@ const Services = () => {
   return (
     <DashboardLayout>
       <ServiceForm open={formOpen} onOpenChange={handleFormClose} service={editingService} />
+      <DeleteConfirmation
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Service"
+        itemName={deletingService?.name}
+        description={`This will permanently delete "${deletingService?.name}" and all associated data. This action cannot be undone.`}
+        isLoading={deleteMutation.isPending}
+      />
+      <ServiceDetailDialog
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        service={viewingService}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
@@ -132,23 +185,44 @@ const Services = () => {
             {services.map((service) => (
               <div key={service.id} className="glass-card p-6 hover:bg-card-hover transition-colors">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
+                  <div 
+                    className="flex items-center gap-3 cursor-pointer flex-1"
+                    onClick={() => handleViewDetails(service)}
+                  >
                     <div className="p-2 rounded-lg bg-primary/20">
                       {iconMap[service.icon] || <Building2 className="w-5 h-5 text-primary" />}
                     </div>
-                    <h3 className="font-semibold text-foreground">{service.name}</h3>
+                    <h3 className="font-semibold text-foreground hover:text-primary transition-colors">{service.name}</h3>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={service.goalMet ? "badge-success" : "badge-warning"}>
                       {service.goalMet ? "On Track" : "Below Target"}
                     </span>
-                    <button
-                      onClick={() => handleEdit(service)}
-                      className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                      title="Edit Service"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewDetails(service)}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(service)}>
+                          <Edit2 className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(service)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 

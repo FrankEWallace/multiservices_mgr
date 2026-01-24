@@ -1,10 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { revenueApi, servicesApi, Revenue as RevenueType } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RevenueForm } from "@/components/forms";
+import { DeleteConfirmation } from "@/components/ui/delete-confirmation";
 import { exportToCSV, revenueExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -22,9 +24,12 @@ import { Plus, Filter, Download, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const Revenue = () => {
+  const queryClient = useQueryClient();
   const [serviceFilter, setServiceFilter] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<RevenueType | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingEntry, setDeletingEntry] = useState<RevenueType | null>(null);
 
   const { data: revenueData, isLoading: revenueLoading } = useQuery({
     queryKey: ["revenue"],
@@ -59,6 +64,31 @@ const Revenue = () => {
     setFormOpen(true);
   };
 
+  const handleDelete = (entry: RevenueType) => {
+    setDeletingEntry(entry);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => revenueApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["revenue"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Revenue entry deleted successfully");
+      setDeleteDialogOpen(false);
+      setDeletingEntry(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete revenue entry");
+    },
+  });
+
+  const confirmDelete = () => {
+    if (deletingEntry) {
+      deleteMutation.mutate(deletingEntry.id);
+    }
+  };
+
   const handleFormClose = (open: boolean) => {
     setFormOpen(open);
     if (!open) setEditingEntry(null);
@@ -82,6 +112,14 @@ const Revenue = () => {
   return (
     <DashboardLayout>
       <RevenueForm open={formOpen} onOpenChange={handleFormClose} revenue={editingEntry} />
+      <DeleteConfirmation
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Delete Revenue Entry"
+        description={`This will permanently delete the revenue entry of $${deletingEntry?.amount?.toLocaleString() || 0} from ${deletingEntry?.serviceName || "Unknown"}.`}
+        isLoading={deleteMutation.isPending}
+      />
       <div className="space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
@@ -249,7 +287,10 @@ const Revenue = () => {
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-danger transition-colors">
+                        <button 
+                          onClick={() => handleDelete(entry)}
+                          className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-danger transition-colors"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
