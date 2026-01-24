@@ -2,59 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Using a system sans-serif stack for a minimal, fast UI (no external font load). */
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* Minimal, low-glare dark palette */
+    --background: 222 20% 7%;
+    --foreground: 210 20% 96%;
 
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
-    --card-hover: 222 47% 11%;
+    --card: 222 18% 10%;
+    --card-foreground: 210 20% 96%;
+    --card-hover: 222 18% 12%;
 
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 18% 10%;
+    --popover-foreground: 210 20% 96%;
 
-    --primary: 160 84% 39%;
-    --primary-foreground: 210 40% 98%;
-    --primary-glow: 160 84% 45%;
+    --primary: 160 70% 38%;
+    --primary-foreground: 210 20% 98%;
+    --primary-glow: 160 70% 42%;
 
-    --secondary: 222 47% 14%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 222 16% 14%;
+    --secondary-foreground: 210 20% 96%;
 
-    --muted: 222 47% 16%;
-    --muted-foreground: 215 20% 55%;
+    --muted: 222 16% 16%;
+    --muted-foreground: 215 14% 62%;
 
-    --accent: 160 84% 39%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 160 70% 38%;
+    --accent-foreground: 210 20% 98%;
 
-    --success: 160 84% 39%;
-    --success-foreground: 210 40% 98%;
+    --success: 160 70% 38%;
+    --success-foreground: 210 20% 98%;
     
-    --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 6%;
+    --warning: 38 90% 52%;
+    --warning-foreground: 222 20% 7%;
     
-    --danger: 0 84% 60%;
-    --danger-foreground: 210 40% 98%;
+    --danger: 0 78% 58%;
+    --danger-foreground: 210 20% 98%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 78% 58%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 222 47% 16%;
-    --input: 222 47% 14%;
-    --ring: 160 84% 39%;
+    --border: 222 14% 18%;
+    --input: 222 14% 18%;
+    --ring: 160 70% 38%;
 
-    --radius: 0.75rem;
+    --radius: 0.6rem;
 
-    --sidebar-background: 222 47% 7%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 222 47% 12%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 47% 14%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-background: 222 18% 9%;
+    --sidebar-foreground: 215 14% 66%;
+    --sidebar-primary: 160 70% 38%;
+    --sidebar-primary-foreground: 210 20% 98%;
+    --sidebar-accent: 222 16% 13%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 222 14% 18%;
+    --sidebar-ring: 160 70% 38%;
 
     --chart-1: 160 84% 39%;
     --chart-2: 199 89% 48%;
@@ -76,15 +77,15 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
   }
 }
 
 @layer utilities {
   .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl;
-    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3),
-                0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    /* Minimal surface: no blur, no heavy glow */
+    @apply bg-card border border-border rounded-lg;
+    box-shadow: none;
   }
 
   .glass-card-hover {
@@ -94,8 +95,7 @@
   .glass-card-hover:hover {
     background-color: hsl(var(--card-hover));
     @apply border-border;
-    box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    box-shadow: none;
   }
 
   .kpi-card {
@@ -104,20 +104,20 @@
 
   .kpi-card::before {
     content: '';
-    @apply absolute top-0 left-0 w-full h-1 opacity-80;
-    background: linear-gradient(90deg, hsl(var(--primary)), transparent);
+    @apply absolute top-0 left-0 w-full h-px opacity-60;
+    background: hsl(var(--border));
   }
 
   .kpi-card-success::before {
-    background: linear-gradient(90deg, hsl(var(--success)), transparent);
+    background: hsl(var(--success) / 0.6);
   }
 
   .kpi-card-warning::before {
-    background: linear-gradient(90deg, hsl(var(--warning)), transparent);
+    background: hsl(var(--warning) / 0.7);
   }
 
   .kpi-card-danger::before {
-    background: linear-gradient(90deg, hsl(var(--danger)), transparent);
+    background: hsl(var(--danger) / 0.7);
   }
 
   .stat-value {
