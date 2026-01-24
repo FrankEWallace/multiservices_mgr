@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import {
   AreaChart,
   Area,
@@ -7,21 +8,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
-const data = [
-  { name: "Jan", revenue: 4200, profit: 1200 },
-  { name: "Feb", revenue: 3800, profit: 980 },
-  { name: "Mar", revenue: 5100, profit: 1450 },
-  { name: "Apr", revenue: 4600, profit: 1280 },
-  { name: "May", revenue: 5800, profit: 1680 },
-  { name: "Jun", revenue: 6200, profit: 1920 },
-  { name: "Jul", revenue: 5400, profit: 1540 },
-  { name: "Aug", revenue: 6800, profit: 2100 },
-  { name: "Sep", revenue: 7200, profit: 2340 },
-  { name: "Oct", revenue: 6900, profit: 2180 },
-  { name: "Nov", revenue: 7800, profit: 2560 },
-  { name: "Dec", revenue: 8400, profit: 2840 },
-];
+import { dashboardApi } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -40,6 +28,22 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function RevenueChart() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["dashboard", "revenue-chart"],
+    queryFn: () => dashboardApi.getRevenueChart(),
+    staleTime: 60000, // 1 minute
+  });
+
+  // Transform data for chart
+  const chartData =
+    data?.chartData.map((item) => ({
+      name: new Date(item.month + "-01").toLocaleDateString("en-US", {
+        month: "short",
+      }),
+      revenue: item.revenue,
+      profit: item.profit,
+    })) || [];
+
   return (
     <div className="chart-container h-80">
       <div className="flex items-center justify-between mb-6">
@@ -55,52 +59,72 @@ export function RevenueChart() {
           </div>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height="85%">
-        <AreaChart data={data}>
-          <defs>
-            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 47%, 16%)" />
-          <XAxis
-            dataKey="name"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
-            tickFormatter={(value) => `$${value / 1000}k`}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="revenue"
-            stroke="hsl(160, 84%, 39%)"
-            strokeWidth={2}
-            fillOpacity={1}
-            fill="url(#colorRevenue)"
-            name="Revenue"
-          />
-          <Area
-            type="monotone"
-            dataKey="profit"
-            stroke="hsl(199, 89%, 48%)"
-            strokeWidth={2}
-            fillOpacity={1}
-            fill="url(#colorProfit)"
-            name="Profit"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      {isLoading ? (
+        <Skeleton className="w-full h-[85%]" />
+      ) : (
+        <ResponsiveContainer width="100%" height="85%">
+          <AreaChart data={chartData}>
+            <defs>
+              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor="hsl(160, 84%, 39%)"
+                  stopOpacity={0.3}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="hsl(160, 84%, 39%)"
+                  stopOpacity={0}
+                />
+              </linearGradient>
+              <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor="hsl(199, 89%, 48%)"
+                  stopOpacity={0.3}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="hsl(199, 89%, 48%)"
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 47%, 16%)" />
+            <XAxis
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
+              tickFormatter={(value) => `$${value / 1000}k`}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              stroke="hsl(160, 84%, 39%)"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorRevenue)"
+              name="Revenue"
+            />
+            <Area
+              type="monotone"
+              dataKey="profit"
+              stroke="hsl(199, 89%, 48%)"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorProfit)"
+              name="Profit"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }
