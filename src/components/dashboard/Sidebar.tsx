@@ -20,7 +20,7 @@ const navItems = [
   { icon: Building2, label: "Services", path: "/services" },
   { icon: DollarSign, label: "Revenue & Costs", path: "/revenue" },
   { icon: Target, label: "Goals", path: "/goals" },
-  { icon: CreditCard, label: "Madeni", path: "/madeni" },
+  { icon: CreditCard, label: "Debts", path: "/madeni" },
   { icon: TrendingUp, label: "Projections", path: "/projections" },
   { icon: FileText, label: "Reports", path: "/reports" },
   { icon: Settings, label: "Settings", path: "/settings" },

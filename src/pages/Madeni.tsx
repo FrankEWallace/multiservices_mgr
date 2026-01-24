@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { madeniApi, Madeni as MadeniType } from "@/lib/api";
+import { debtsApi, Debt } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MadeniForm, PaymentForm } from "@/components/forms";
 import { exportToCSV, madeniExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
@@ -27,22 +27,22 @@ const Madeni = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [paymentFormOpen, setPaymentFormOpen] = useState(false);
-  const [editingMadeni, setEditingMadeni] = useState<MadeniType | null>(null);
-  const [paymentMadeni, setPaymentMadeni] = useState<MadeniType | null>(null);
+  const [editingMadeni, setEditingMadeni] = useState<Debt | null>(null);
+  const [paymentMadeni, setPaymentMadeni] = useState<Debt | null>(null);
 
   const { data: madeniData, isLoading: madeniLoading } = useQuery({
-    queryKey: ["madeni"],
-    queryFn: () => madeniApi.getAll(),
+    queryKey: ["debts"],
+    queryFn: () => debtsApi.getAll(),
     staleTime: 30000,
   });
 
   const { data: agingData, isLoading: agingLoading } = useQuery({
-    queryKey: ["madeni", "aging"],
-    queryFn: madeniApi.getAging,
+    queryKey: ["debts", "aging"],
+    queryFn: debtsApi.getAging,
     staleTime: 30000,
   });
 
-  const madenis = madeniData?.madenis || [];
+  const madenis = madeniData?.debts || [];
   const aging = agingData?.aging || [];
   const agingTotal = agingData?.total;
 
@@ -55,12 +55,12 @@ const Madeni = () => {
 
   const totalOutstanding = madenis.reduce((sum, m) => sum + m.balance, 0);
 
-  const handleEdit = (madeni: MadeniType) => {
+  const handleEdit = (madeni: Debt) => {
     setEditingMadeni(madeni);
     setFormOpen(true);
   };
 
-  const handlePayment = (madeni: MadeniType) => {
+  const handlePayment = (madeni: Debt) => {
     setPaymentMadeni(madeni);
     setPaymentFormOpen(true);
   };
@@ -71,7 +71,7 @@ const Madeni = () => {
   };
 
   const handleExportCSV = () => {
-    exportToCSV(filteredMadenis, madeniExportColumns, `madeni_${new Date().toISOString().split("T")[0]}`);
+    exportToCSV(filteredMadenis, madeniExportColumns, `debts_${new Date().toISOString().split("T")[0]}`);
   };
 
   const handleExportPDF = () => {
@@ -82,7 +82,7 @@ const Madeni = () => {
       { label: "Overdue", value: overdueCount, type: overdueCount > 0 ? "danger" : "success" },
     ]);
     const table = generateTableHTML(filteredMadenis, madeniExportColumns);
-    exportToPDF("Debt Report (Madeni)", `<h2>Summary</h2>${summaryItems}<h2>Debtors</h2>${table}`, "madeni_report");
+    exportToPDF("Debt Report", `<h2>Summary</h2>${summaryItems}<h2>Debtors</h2>${table}`, "debt_report");
   };
 
   return (
@@ -93,7 +93,7 @@ const Madeni = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Madeni (Debt Management)</h1>
+            <h1 className="text-2xl font-bold text-foreground">Debt Management</h1>
             <p className="text-muted-foreground">Track and manage outstanding debts</p>
           </div>
           <div className="flex items-center gap-3">

@@ -242,17 +242,39 @@ dashboard.get("/insights", async (c) => {
   return c.json({ insights });
 });
 
-// Get madeni summary
+// Get debt summary
+dashboard.get("/debt-summary", async (c) => {
+  const today = new Date().toISOString().split("T")[0];
+
+  const allDebts = await db.select().from(madenis).where(sql`${madenis.status} != 'paid'`);
+
+  const summary = {
+    total: allDebts.reduce((sum, m) => sum + m.balance, 0),
+    count: allDebts.length,
+    overdue: allDebts.filter((m) => m.dueDate && m.dueDate < today).length,
+    dueSoon: allDebts.filter((m) => {
+      if (!m.dueDate) return false;
+      const dueDate = new Date(m.dueDate);
+      const weekFromNow = new Date();
+      weekFromNow.setDate(weekFromNow.getDate() + 7);
+      return dueDate >= new Date(today) && dueDate <= weekFromNow;
+    }).length,
+  };
+
+  return c.json({ summary });
+});
+
+// Keep old endpoint for backwards compatibility
 dashboard.get("/madeni-summary", async (c) => {
   const today = new Date().toISOString().split("T")[0];
 
-  const allMadenis = await db.select().from(madenis).where(sql`${madenis.status} != 'paid'`);
+  const allDebts = await db.select().from(madenis).where(sql`${madenis.status} != 'paid'`);
 
   const summary = {
-    total: allMadenis.reduce((sum, m) => sum + m.balance, 0),
-    count: allMadenis.length,
-    overdue: allMadenis.filter((m) => m.dueDate && m.dueDate < today).length,
-    dueSoon: allMadenis.filter((m) => {
+    total: allDebts.reduce((sum, m) => sum + m.balance, 0),
+    count: allDebts.length,
+    overdue: allDebts.filter((m) => m.dueDate && m.dueDate < today).length,
+    dueSoon: allDebts.filter((m) => {
       if (!m.dueDate) return false;
       const dueDate = new Date(m.dueDate);
       const weekFromNow = new Date();

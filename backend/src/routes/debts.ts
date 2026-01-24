@@ -79,7 +79,7 @@ madeniRouter.get("/", async (c) => {
     result = result.filter((m) => m.serviceId === parseInt(serviceId));
   }
 
-  return c.json({ madenis: result });
+  return c.json({ debts: result, madenis: result }); // Include both for backwards compatibility
 });
 
 // Get aging report

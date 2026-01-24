@@ -75,7 +75,8 @@ export const dashboardApi = {
   getServiceComparison: () =>
     apiFetch<{ comparison: ServiceComparison[] }>("/dashboard/service-comparison"),
   getInsights: () => apiFetch<{ insights: Insight[] }>("/dashboard/insights"),
-  getMadeniSummary: () => apiFetch<{ summary: MadeniSummary }>("/dashboard/madeni-summary"),
+  getDebtSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"),
+  getMadeniSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"), // Alias
   getGoalProgress: () => apiFetch<{ goals: GoalProgress[] }>("/dashboard/goal-progress"),
 };
 
@@ -123,34 +124,37 @@ export const revenueApi = {
     apiFetch<{ message: string }>(`/revenue/${id}`, { method: "DELETE" }),
 };
 
-// Madeni API
-export const madeniApi = {
+// Debts API
+export const debtsApi = {
   getAll: (status?: string, serviceId?: number) => {
     const params = new URLSearchParams();
     if (status) params.append("status", status);
     if (serviceId) params.append("serviceId", serviceId.toString());
-    return apiFetch<{ madenis: Madeni[] }>(`/madeni?${params.toString()}`);
+    return apiFetch<{ debts: Debt[] }>(`/debts?${params.toString()}`);
   },
-  getAging: () => apiFetch<{ aging: AgingReport[]; total: { amount: number; count: number } }>("/madeni/aging"),
-  getOne: (id: number) => apiFetch<{ madeni: Madeni; payments: MadeniPayment[] }>(`/madeni/${id}`),
-  create: (data: Partial<Madeni>) =>
-    apiFetch<{ madeni: Madeni }>("/madeni", {
+  getAging: () => apiFetch<{ aging: AgingReport[]; total: { amount: number; count: number } }>("/debts/aging"),
+  getOne: (id: number) => apiFetch<{ debt: Debt; payments: DebtPayment[] }>(`/debts/${id}`),
+  create: (data: Partial<Debt>) =>
+    apiFetch<{ debt: Debt }>("/debts", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   recordPayment: (id: number, data: { amount: number; paymentDate: string; paymentMethod: string }) =>
-    apiFetch<{ payment: MadeniPayment; newBalance: number; newStatus: string }>(`/madeni/${id}/payments`, {
+    apiFetch<{ payment: DebtPayment; newBalance: number; newStatus: string }>(`/debts/${id}/payments`, {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  update: (id: number, data: Partial<Madeni>) =>
-    apiFetch<{ madeni: Madeni }>(`/madeni/${id}`, {
+  update: (id: number, data: Partial<Debt>) =>
+    apiFetch<{ debt: Debt }>(`/debts/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
   delete: (id: number) =>
-    apiFetch<{ message: string }>(`/madeni/${id}`, { method: "DELETE" }),
+    apiFetch<{ message: string }>(`/debts/${id}`, { method: "DELETE" }),
 };
+
+// Keep madeniApi as alias for backwards compatibility
+export const madeniApi = debtsApi;
 
 // Goals API
 export const goalsApi = {
@@ -227,12 +231,15 @@ export interface Insight {
   value?: number;
 }
 
-export interface MadeniSummary {
+export interface DebtSummary {
   total: number;
   count: number;
   overdue: number;
   dueSoon: number;
 }
+
+// Keep MadeniSummary as alias for backwards compatibility
+export type MadeniSummary = DebtSummary;
 
 export interface GoalProgress {
   id: number;
@@ -308,7 +315,7 @@ export interface TrendData {
   transactions: number;
 }
 
-export interface Madeni {
+export interface Debt {
   id: number;
   serviceId: number;
   serviceName?: string;
@@ -328,9 +335,12 @@ export interface Madeni {
   updatedAt?: string;
 }
 
-export interface MadeniPayment {
+// Keep Madeni as alias for backwards compatibility
+export type Madeni = Debt;
+
+export interface DebtPayment {
   id: number;
-  madeniId: number;
+  debtId: number;
   amount: number;
   paymentDate: string;
   paymentMethod: string;
@@ -338,6 +348,9 @@ export interface MadeniPayment {
   notes?: string;
   createdAt?: string;
 }
+
+// Keep MadeniPayment as alias for backwards compatibility
+export type MadeniPayment = DebtPayment;
 
 export interface AgingReport {
   label: string;

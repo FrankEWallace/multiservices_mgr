@@ -22,15 +22,15 @@ Meilleur Insights is a comprehensive business intelligence dashboard designed fo
 
 | Feature | Description |
 |---------|-------------|
-| 📊 **KPI Dashboard** | Real-time key performance indicators at a glance |
-| 💰 **Revenue Tracking** | Daily, monthly, and yearly revenue monitoring per service |
-| 📉 **Expense Management** | Track costs by category and service |
-| 💳 **Debt Management** | Track money owed by customers with aging reports and payment history |
-| 🎯 **Goal Setting** | Set and monitor targets at company and service levels |
-| 📈 **Service Comparison** | Compare performance across all business units |
-| 📋 **Reports & Export** | Generate PDF reports, export to CSV/JSON |
-| 🔔 **Notifications** | Alerts for overdue debts, goal progress, and more |
-| ⚙️ **Configurable Settings** | Currency, timezone, appearance, and business preferences |
+|  **KPI Dashboard** | Real-time key performance indicators at a glance |
+|  **Revenue Tracking** | Daily, monthly, and yearly revenue monitoring per service |
+|  **Expense Management** | Track costs by category and service |
+|  **Debt Management** | Track money owed by customers with aging reports and payment history |
+|  **Goal Setting** | Set and monitor targets at company and service levels |
+|  **Service Comparison** | Compare performance across all business units |
+|  **Reports & Export** | Generate PDF reports, export to CSV/JSON |
+|  **Notifications** | Alerts for overdue debts, goal progress, and more |
+|  **Configurable Settings** | Currency, timezone, appearance, and business preferences |
 
 ### Supported Services
 
@@ -171,13 +171,13 @@ meilleur-insights/
 | POST | `/api/revenue` | Record revenue |
 | GET | `/api/revenue/summary` | Revenue summary |
 
-### Debts (Madeni)
+### Debts
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/madeni` | List all debts |
-| POST | `/api/madeni` | Create a debt record |
-| POST | `/api/madeni/:id/payments` | Record a payment |
-| GET | `/api/madeni/aging` | Aging report |
+| GET | `/api/debts` | List all debts |
+| POST | `/api/debts` | Create a debt record |
+| POST | `/api/debts/:id/payments` | Record a payment |
+| GET | `/api/debts/aging` | Aging report |
 
 ### Goals
 | Method | Endpoint | Description |

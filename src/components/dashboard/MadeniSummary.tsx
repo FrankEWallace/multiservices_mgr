@@ -14,7 +14,7 @@ export function MadeniSummary() {
   return (
     <div className="glass-card p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="section-title">Madeni Overview</h3>
+        <h3 className="section-title">Debt Overview</h3>
         {isLoading ? (
           <Skeleton className="h-6 w-20" />
         ) : (

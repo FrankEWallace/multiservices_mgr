@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { madeniApi, servicesApi, Madeni } from "@/lib/api";
+import { debtsApi, servicesApi, Debt } from "@/lib/api";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -25,7 +25,7 @@ import {
 interface MadeniFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  madeni?: Madeni | null;
+  madeni?: Debt | null;
 }
 
 export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
@@ -68,9 +68,9 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
   }, [madeni]);
 
   const createMutation = useMutation({
-    mutationFn: madeniApi.create,
+    mutationFn: debtsApi.create,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["madeni"] });
+      queryClient.invalidateQueries({ queryKey: ["debts"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Debtor added successfully");
       onOpenChange(false);
@@ -82,10 +82,10 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Madeni> }) =>
-      madeniApi.update(id, data),
+    mutationFn: ({ id, data }: { id: number; data: Partial<Debt> }) =>
+      debtsApi.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["madeni"] });
+      queryClient.invalidateQueries({ queryKey: ["debts"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Debtor updated successfully");
       onOpenChange(false);
@@ -117,7 +117,7 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
       return;
     }
 
-    const data: Partial<Madeni> = {
+    const data: Partial<Debt> = {
       serviceId: formData.serviceId ? Number(formData.serviceId) : undefined,
       debtorName: formData.debtorName,
       debtorContact: formData.debtorContact || undefined,
@@ -277,7 +277,7 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
 interface PaymentFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  madeni: Madeni | null;
+  madeni: Debt | null;
 }
 
 const paymentMethods = [
@@ -301,9 +301,9 @@ export function PaymentForm({ open, onOpenChange, madeni }: PaymentFormProps) {
 
   const paymentMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: { amount: number; paymentDate: string; paymentMethod: string } }) =>
-      madeniApi.recordPayment(id, data),
+      debtsApi.recordPayment(id, data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["madeni"] });
+      queryClient.invalidateQueries({ queryKey: ["debts"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success(`Payment recorded. New balance: $${data.newBalance.toLocaleString()}`);
       onOpenChange(false);
