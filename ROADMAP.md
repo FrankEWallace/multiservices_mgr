@@ -24,7 +24,7 @@ Meilleur Insights is a comprehensive business intelligence dashboard for managin
 - Real-time KPI Dashboard
 - Revenue & Profit Tracking
 - Service Performance Analytics
-- Madeni (Debt) Management
+- Debts Management
 - Goal Setting & Tracking
 - Financial Projections & Forecasting
 - Automated Reports Generation
@@ -96,15 +96,15 @@ PUT    /api/revenue/{id}          - Update revenue entry
 DELETE /api/revenue/{id}          - Delete revenue entry
 ```
 
-**Madeni (Debt) APIs:** ✅
+**Debts APIs:** ✅
 ```
-GET    /api/madeni                - List all debts
-GET    /api/madeni/{id}           - Get debt details with payments
-POST   /api/madeni                - Add new debtor
-PUT    /api/madeni/{id}           - Update debt info
-POST   /api/madeni/{id}/payment   - Record payment
-GET    /api/madeni/aging          - Aging report
-DELETE /api/madeni/{id}           - Delete debt (admin)
+GET    /api/debts                - List all debts
+GET    /api/debts/{id}           - Get debt details with payments
+POST   /api/debts                - Add new debtor
+PUT    /api/debts/{id}           - Update debt info
+POST   /api/debts/{id}/payment   - Record payment
+GET    /api/debts/aging          - Aging report
+DELETE /api/debts/{id}           - Delete debt (admin)
 ```
 
 **Goals APIs:** ✅
@@ -120,32 +120,32 @@ DELETE /api/goals/{id}            - Delete goal
 
 ---
 
-### 📋 Phase 2: Frontend Integration (Week 3)
+### ✅ Phase 2: Frontend Integration (Week 3)
 
 #### 2.1 API Client Setup
-- [ ] Create API client utility (axios/fetch)
-- [ ] Set up authentication context
-- [ ] Configure TanStack Query for all endpoints
-- [ ] Create custom data fetching hooks
-- [ ] Implement token management
-- [ ] Add request/response interceptors
+- [x] Create API client utility (axios/fetch)
+- [x] Set up authentication context
+- [x] Configure TanStack Query for all endpoints
+- [x] Create custom data fetching hooks
+- [x] Implement token management
+- [x] Add request/response interceptors
 
 #### 2.2 Authentication UI
-- [ ] Login page
-- [ ] Registration page
-- [ ] Forgot password page
-- [ ] Protected route wrapper
-- [ ] Auth state persistence
+- [x] Login page
+- [x] Registration page
+- [x] Forgot password page
+- [x] Protected route wrapper
+- [x] Auth state persistence
 
 #### 2.3 Connect Pages to APIs
-- [ ] Dashboard (Index.tsx) - Real KPIs
-- [ ] Services.tsx - Service CRUD
-- [ ] Revenue.tsx - Revenue tracking
-- [ ] Madeni.tsx - Debt management
-- [ ] Goals.tsx - Goal tracking
-- [ ] Projections.tsx - Forecasting
-- [ ] Reports.tsx - Report generation
-- [ ] Settings.tsx - App settings
+- [x] Dashboard (Index.tsx) - Real KPIs
+- [x] Services.tsx - Service CRUD
+- [x] Revenue.tsx - Revenue tracking
+- [x] Debts.tsx - Debt management (renamed from Madeni)
+- [x] Goals.tsx - Goal tracking
+- [x] Projections.tsx - Forecasting
+- [x] Reports.tsx - Report generation
+- [x] Settings.tsx - App settings
 
 ---
 
@@ -171,7 +171,7 @@ DELETE /api/goals/{id}            - Delete goal
 - [ ] Recurring expenses
 - [ ] Expense reports
 
-#### 3.4 Madeni (Debt) Management
+#### 3.4 Debts Management
 - [ ] Add debtor form
 - [ ] Record payment form
 - [ ] Payment history

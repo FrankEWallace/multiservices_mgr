@@ -14,6 +14,8 @@ import Projections from "./pages/Projections";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,10 +68,13 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+              <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
               <Route path="/revenue" element={<ProtectedRoute><Revenue /></ProtectedRoute>} />
               <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
+              <Route path="/debts" element={<ProtectedRoute><Madeni /></ProtectedRoute>} />
               <Route path="/madeni" element={<ProtectedRoute><Madeni /></ProtectedRoute>} />
               <Route path="/projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
