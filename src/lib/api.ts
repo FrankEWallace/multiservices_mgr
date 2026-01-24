@@ -78,6 +78,12 @@ export const dashboardApi = {
   getDebtSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"),
   getMadeniSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"), // Alias
   getGoalProgress: () => apiFetch<{ goals: GoalProgress[] }>("/dashboard/goal-progress"),
+  getComparison: (period: "mom" | "yoy" | "wow" = "mom") =>
+    apiFetch<{
+      period: string;
+      dateRange: { current: { start: string; end: string }; previous: { start: string; end: string } };
+      comparison: ComparisonData[];
+    }>(`/dashboard/comparison?period=${period}`),
 };
 
 // Services API
@@ -320,6 +326,14 @@ export interface GoalProgress {
   progress: number;
   status?: string;
   endDate?: string;
+}
+
+export interface ComparisonData {
+  label: string;
+  current: number;
+  previous: number;
+  change: number;
+  changePercent: number;
 }
 
 export interface Service {

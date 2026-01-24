@@ -302,4 +302,140 @@ dashboard.get("/goal-progress", async (c) => {
   return c.json({ goals: goalsWithProgress });
 });
 
+// Get comparison data (MoM, YoY, WoW)
+dashboard.get("/comparison", async (c) => {
+  const { period = "mom" } = c.req.query();
+  
+  let currentStart: string;
+  let currentEnd: string;
+  let previousStart: string;
+  let previousEnd: string;
+  
+  const now = new Date();
+  const today = now.toISOString().split("T")[0];
+  
+  if (period === "wow") {
+    // Week over Week
+    const startOfThisWeek = new Date(now);
+    startOfThisWeek.setDate(now.getDate() - now.getDay());
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+    const endOfLastWeek = new Date(startOfThisWeek);
+    endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+    
+    currentStart = startOfThisWeek.toISOString().split("T")[0];
+    currentEnd = today;
+    previousStart = startOfLastWeek.toISOString().split("T")[0];
+    previousEnd = endOfLastWeek.toISOString().split("T")[0];
+  } else if (period === "yoy") {
+    // Year over Year
+    const startOfThisYear = `${now.getFullYear()}-01-01`;
+    const startOfLastYear = `${now.getFullYear() - 1}-01-01`;
+    const endOfLastYear = `${now.getFullYear() - 1}-12-31`;
+    
+    currentStart = startOfThisYear;
+    currentEnd = today;
+    previousStart = startOfLastYear;
+    previousEnd = endOfLastYear;
+  } else {
+    // Month over Month (default)
+    const startOfThisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startOfLastMonth = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, "0")}-01`;
+    const endOfLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).toISOString().split("T")[0];
+    
+    currentStart = startOfThisMonth;
+    currentEnd = today;
+    previousStart = startOfLastMonth;
+    previousEnd = endOfLastMonth;
+  }
+  
+  // Current period revenue
+  const currentRevenueResult = await db
+    .select({ total: sum(revenues.amount) })
+    .from(revenues)
+    .where(and(gte(revenues.date, currentStart), lte(revenues.date, currentEnd)));
+  
+  // Previous period revenue
+  const previousRevenueResult = await db
+    .select({ total: sum(revenues.amount) })
+    .from(revenues)
+    .where(and(gte(revenues.date, previousStart), lte(revenues.date, previousEnd)));
+  
+  // Current period expenses
+  const currentExpensesResult = await db
+    .select({ total: sum(expenses.amount) })
+    .from(expenses)
+    .where(and(gte(expenses.date, currentStart), lte(expenses.date, currentEnd)));
+  
+  // Previous period expenses
+  const previousExpensesResult = await db
+    .select({ total: sum(expenses.amount) })
+    .from(expenses)
+    .where(and(gte(expenses.date, previousStart), lte(expenses.date, previousEnd)));
+  
+  // Current period transactions count
+  const currentTxCount = await db
+    .select({ count: sql`COUNT(*)` })
+    .from(revenues)
+    .where(and(gte(revenues.date, currentStart), lte(revenues.date, currentEnd)));
+  
+  // Previous period transactions count
+  const previousTxCount = await db
+    .select({ count: sql`COUNT(*)` })
+    .from(revenues)
+    .where(and(gte(revenues.date, previousStart), lte(revenues.date, previousEnd)));
+  
+  // Calculate values
+  const currentRevenue = Number(currentRevenueResult[0]?.total) || 0;
+  const previousRevenue = Number(previousRevenueResult[0]?.total) || 0;
+  const currentExpense = Number(currentExpensesResult[0]?.total) || 0;
+  const previousExpense = Number(previousExpensesResult[0]?.total) || 0;
+  const currentProfit = currentRevenue - currentExpense;
+  const previousProfit = previousRevenue - previousExpense;
+  const currentCount = Number(currentTxCount[0]?.count) || 0;
+  const previousCount = Number(previousTxCount[0]?.count) || 0;
+  
+  const calcChange = (current: number, previous: number) => 
+    previous !== 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
+  
+  return c.json({
+    period,
+    dateRange: {
+      current: { start: currentStart, end: currentEnd },
+      previous: { start: previousStart, end: previousEnd },
+    },
+    comparison: [
+      {
+        label: "Revenue",
+        current: currentRevenue,
+        previous: previousRevenue,
+        change: currentRevenue - previousRevenue,
+        changePercent: calcChange(currentRevenue, previousRevenue),
+      },
+      {
+        label: "Expenses",
+        current: currentExpense,
+        previous: previousExpense,
+        change: currentExpense - previousExpense,
+        changePercent: calcChange(currentExpense, previousExpense),
+      },
+      {
+        label: "Profit",
+        current: currentProfit,
+        previous: previousProfit,
+        change: currentProfit - previousProfit,
+        changePercent: calcChange(currentProfit, previousProfit),
+      },
+      {
+        label: "Transactions",
+        current: currentCount,
+        previous: previousCount,
+        change: currentCount - previousCount,
+        changePercent: calcChange(currentCount, previousCount),
+      },
+    ],
+  });
+});
+
 export default dashboard;
