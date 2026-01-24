@@ -122,6 +122,54 @@ export const revenueApi = {
     }),
   delete: (id: number) =>
     apiFetch<{ message: string }>(`/revenue/${id}`, { method: "DELETE" }),
+  bulkImport: (revenues: Partial<Revenue>[]) =>
+    apiFetch<{ message: string; imported: number; failed: number; errors: any[] }>("/revenue/bulk", {
+      method: "POST",
+      body: JSON.stringify({ revenues }),
+    }),
+};
+
+// Expenses API
+export const expensesApi = {
+  getAll: (limit?: number, category?: string, serviceId?: number) => {
+    const params = new URLSearchParams();
+    if (limit) params.append("limit", limit.toString());
+    if (category) params.append("category", category);
+    if (serviceId) params.append("serviceId", serviceId.toString());
+    return apiFetch<{ expenses: Expense[] }>(`/expenses?${params.toString()}`);
+  },
+  getSummary: () => apiFetch<{ summary: ExpenseSummary }>("/expenses/summary"),
+  getByCategory: (period?: string) =>
+    apiFetch<{ byCategory: { category: string; total: number; count: number }[] }>(
+      `/expenses/by-category${period ? `?period=${period}` : ""}`
+    ),
+  getByService: (period?: string) =>
+    apiFetch<{ byService: { id: number; name: string; color: string; expense: number }[] }>(
+      `/expenses/by-service${period ? `?period=${period}` : ""}`
+    ),
+  getTrend: (period?: string, days?: number) =>
+    apiFetch<{ trend: { period: string; expense: number; count: number }[] }>(
+      `/expenses/trend${period || days ? `?${period ? `period=${period}` : ""}${days ? `&days=${days}` : ""}` : ""}`
+    ),
+  getCategories: () => apiFetch<{ categories: ExpenseCategory[] }>("/expenses/categories"),
+  getOne: (id: number) => apiFetch<{ expense: Expense }>(`/expenses/${id}`),
+  create: (data: Partial<Expense>) =>
+    apiFetch<{ expense: Expense }>("/expenses", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: number, data: Partial<Expense>) =>
+    apiFetch<{ expense: Expense }>(`/expenses/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number) =>
+    apiFetch<{ message: string }>(`/expenses/${id}`, { method: "DELETE" }),
+  bulkImport: (expenses: Partial<Expense>[]) =>
+    apiFetch<{ message: string; imported: number; failed: number; errors: any[] }>("/expenses/bulk", {
+      method: "POST",
+      body: JSON.stringify({ expenses }),
+    }),
 };
 
 // Debts API
@@ -313,6 +361,36 @@ export interface TrendData {
   period: string;
   revenue: number;
   transactions: number;
+}
+
+// Expense Types
+export interface Expense {
+  id: number;
+  serviceId?: number;
+  serviceName?: string;
+  amount: number;
+  date: string;
+  category: string;
+  description?: string;
+  vendor?: string;
+  isRecurring: boolean;
+  createdBy?: number;
+  createdAt?: string;
+}
+
+export interface ExpenseSummary {
+  today: number;
+  thisMonth: number;
+  lastMonth: number;
+  thisYear: number;
+  changePercent: number;
+  recurring: { total: number; count: number };
+  byCategory: { category: string; total: number; count: number }[];
+}
+
+export interface ExpenseCategory {
+  value: string;
+  label: string;
 }
 
 export interface Debt {

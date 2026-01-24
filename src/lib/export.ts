@@ -215,6 +215,16 @@ export const goalExportColumns = [
   { key: "endDate", header: "End Date" },
 ];
 
+export const expenseExportColumns = [
+  { key: "date", header: "Date", formatter: (v: unknown) => new Date(v as string).toLocaleDateString() },
+  { key: "serviceName", header: "Service" },
+  { key: "category", header: "Category" },
+  { key: "vendor", header: "Vendor" },
+  { key: "description", header: "Description" },
+  { key: "amount", header: "Amount", formatter: (v: unknown) => `$${Number(v || 0).toLocaleString()}` },
+  { key: "isRecurring", header: "Recurring", formatter: (v: unknown) => (v as boolean) ? "Yes" : "No" },
+];
+
 // HTML table generator for PDF exports
 export function generateTableHTML<T>(
   data: T[],

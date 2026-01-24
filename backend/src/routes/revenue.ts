@@ -181,6 +181,54 @@ revenueRouter.post("/", authMiddleware, async (c) => {
   }
 });
 
+// Bulk import revenue entries (protected)
+revenueRouter.post("/bulk", authMiddleware, async (c) => {
+  try {
+    const body = await c.req.json();
+    const user = c.get("user");
+
+    if (!Array.isArray(body.revenues)) {
+      return c.json({ error: "revenues array is required" }, 400);
+    }
+
+    const validRevenues: any[] = [];
+    const errors: any[] = [];
+
+    // Get all service IDs for validation
+    const allServices = await db.select({ id: services.id }).from(services);
+    const serviceIds = new Set(allServices.map((s) => s.id));
+
+    for (let i = 0; i < body.revenues.length; i++) {
+      try {
+        const data = createRevenueSchema.parse(body.revenues[i]);
+        if (!serviceIds.has(data.serviceId)) {
+          errors.push({ row: i + 1, error: `Service ID ${data.serviceId} not found` });
+          continue;
+        }
+        validRevenues.push({
+          ...data,
+          createdBy: user.id,
+        });
+      } catch (error) {
+        errors.push({ row: i + 1, error: error instanceof z.ZodError ? error.errors : "Invalid data" });
+      }
+    }
+
+    if (validRevenues.length > 0) {
+      await db.insert(revenues).values(validRevenues);
+    }
+
+    return c.json({
+      message: `Imported ${validRevenues.length} revenue entries`,
+      imported: validRevenues.length,
+      failed: errors.length,
+      errors: errors.slice(0, 10),
+    });
+  } catch (error) {
+    throw error;
+  }
+});
+
 // Update revenue entry (protected)
 revenueRouter.put("/:id", authMiddleware, async (c) => {
   try {

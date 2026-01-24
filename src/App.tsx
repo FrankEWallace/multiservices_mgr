@@ -10,6 +10,7 @@ import Services from "./pages/Services";
 import Revenue from "./pages/Revenue";
 import Goals from "./pages/Goals";
 import Madeni from "./pages/Madeni";
+import Expenses from "./pages/Expenses";
 import Projections from "./pages/Projections";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
               <Route path="/debts" element={<ProtectedRoute><Madeni /></ProtectedRoute>} />
               <Route path="/madeni" element={<ProtectedRoute><Madeni /></ProtectedRoute>} />
+              <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
               <Route path="/projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

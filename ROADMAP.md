@@ -163,13 +163,15 @@ DELETE /api/goals/{id}            - Delete goal
 - [x] Edit revenue entry
 - [x] Revenue history table
 - [x] Filter by date/service
-- [ ] Bulk import (CSV)
+- [x] Bulk import (CSV)
 
 #### 3.3 Expense Management
-- [ ] Add expense form
-- [ ] Expense categories
-- [ ] Recurring expenses
-- [ ] Expense reports
+- [x] Add expense form
+- [x] Expense categories
+- [x] Recurring expenses
+- [x] Expense reports
+- [x] Expense filtering (by service, category, search)
+- [x] CSV bulk import
 
 #### 3.4 Debts Management
 - [x] Add debtor form
