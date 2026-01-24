@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { goalsApi, Goal as GoalType } from "@/lib/api";
-import { GoalForm } from "@/components/forms";
+import { GoalForm, GoalHistoryDialog } from "@/components/forms";
 import { DeleteConfirmation } from "@/components/ui/delete-confirmation";
 import { exportToCSV, goalExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
 import { toast } from "sonner";
@@ -14,11 +14,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CheckCircle, Target, TrendingUp, Calendar, Plus, Download, Edit2, Trash2 } from "lucide-react";
+import { CheckCircle, Target, TrendingUp, Calendar, Plus, Download, Edit2, Trash2, History, CheckCheck } from "lucide-react";
 
 const Goals = () => {
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalType | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingGoal, setDeletingGoal] = useState<GoalType | null>(null);
@@ -66,6 +67,24 @@ const Goals = () => {
     },
   });
 
+  const completeMutation = useMutation({
+    mutationFn: (id: number) => goalsApi.complete(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success(data.message, {
+        description: `Achievement rate: ${data.achievementRate.toFixed(1)}%`,
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to complete goal");
+    },
+  });
+
+  const handleComplete = (goal: GoalType) => {
+    completeMutation.mutate(goal.id);
+  };
+
   const confirmDelete = () => {
     if (deletingGoal) {
       deleteMutation.mutate(deletingGoal.id);
@@ -95,6 +114,7 @@ const Goals = () => {
   return (
     <DashboardLayout>
       <GoalForm open={formOpen} onOpenChange={handleFormClose} goal={editingGoal} />
+      <GoalHistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} />
       <DeleteConfirmation
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -112,6 +132,10 @@ const Goals = () => {
             <p className="text-muted-foreground">Track targets and achievement progress</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" className="gap-2" onClick={() => setHistoryOpen(true)}>
+              <History className="w-4 h-4" />
+              History
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
@@ -271,6 +295,16 @@ const Goals = () => {
                       </td>
                       <td className="text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {goal.status === "active" && (
+                            <button
+                              onClick={() => handleComplete(goal)}
+                              className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-success transition-colors"
+                              title="Mark Complete"
+                              disabled={completeMutation.isPending}
+                            >
+                              <CheckCheck className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleEdit(goal)}
                             className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"

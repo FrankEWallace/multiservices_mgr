@@ -4,3 +4,5 @@ export { ExpenseForm } from "./ExpenseForm";
 export { MadeniForm, PaymentForm } from "./MadeniForm";
 export { GoalForm } from "./GoalForm";
 export { CSVImportDialog } from "./CSVImportDialog";
+export { ReminderDialog } from "./ReminderDialog";
+export { GoalHistoryDialog } from "./GoalHistoryDialog";

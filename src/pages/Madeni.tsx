@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { debtsApi, Debt } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MadeniForm, PaymentForm } from "@/components/forms";
+import { MadeniForm, PaymentForm, ReminderDialog } from "@/components/forms";
 import { DeleteConfirmation } from "@/components/ui/delete-confirmation";
 import { exportToCSV, madeniExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
 import { toast } from "sonner";
@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Filter, Download, Phone, DollarSign, Edit2, Trash2 } from "lucide-react";
+import { Plus, Filter, Download, Phone, DollarSign, Edit2, Trash2, Send } from "lucide-react";
 import { useState } from "react";
 
 const Madeni = () => {
@@ -30,8 +30,10 @@ const Madeni = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [paymentFormOpen, setPaymentFormOpen] = useState(false);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [editingMadeni, setEditingMadeni] = useState<Debt | null>(null);
   const [paymentMadeni, setPaymentMadeni] = useState<Debt | null>(null);
+  const [reminderMadeni, setReminderMadeni] = useState<Debt | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingMadeni, setDeletingMadeni] = useState<Debt | null>(null);
 
@@ -68,6 +70,11 @@ const Madeni = () => {
   const handlePayment = (madeni: Debt) => {
     setPaymentMadeni(madeni);
     setPaymentFormOpen(true);
+  };
+
+  const handleReminder = (madeni: Debt) => {
+    setReminderMadeni(madeni);
+    setReminderDialogOpen(true);
   };
 
   const handleDelete = (madeni: Debt) => {
@@ -119,6 +126,7 @@ const Madeni = () => {
     <DashboardLayout>
       <MadeniForm open={formOpen} onOpenChange={handleFormClose} madeni={editingMadeni} />
       <PaymentForm open={paymentFormOpen} onOpenChange={setPaymentFormOpen} madeni={paymentMadeni} />
+      <ReminderDialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen} debt={reminderMadeni} />
       <DeleteConfirmation
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -265,13 +273,22 @@ const Madeni = () => {
                     <td className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         {debtor.balance > 0 && (
-                          <button
-                            onClick={() => handlePayment(debtor)}
-                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-success transition-colors"
-                            title="Record Payment"
-                          >
-                            <DollarSign className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handlePayment(debtor)}
+                              className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-success transition-colors"
+                              title="Record Payment"
+                            >
+                              <DollarSign className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleReminder(debtor)}
+                              className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary transition-colors"
+                              title="Send Reminder"
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={() => handleEdit(debtor)}
@@ -288,9 +305,13 @@ const Madeni = () => {
                           <Trash2 className="w-4 h-4" />
                         </button>
                         {debtor.debtorContact && (
-                          <button className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary transition-colors" title="Call">
+                          <a 
+                            href={`tel:${debtor.debtorContact}`}
+                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary transition-colors" 
+                            title="Call"
+                          >
                             <Phone className="w-4 h-4" />
-                          </button>
+                          </a>
                         )}
                       </div>
                     </td>

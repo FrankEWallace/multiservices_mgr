@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { db } from "../db";
-import { goals, services } from "../db/schema";
+import { goals, services, goalHistory } from "../db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { authMiddleware, type AuthUser } from "../middleware/auth";
 
@@ -244,13 +244,153 @@ goalsRouter.patch("/:id/progress", authMiddleware, async (c) => {
 goalsRouter.delete("/:id", authMiddleware, async (c) => {
   const id = parseInt(c.req.param("id"));
 
-  const deletedGoals = await db.delete(goals).where(eq(goals.id, id)).returning();
+  // Get goal details before deletion
+  const goalResult = await db
+    .select({
+      goal: goals,
+      serviceName: services.name,
+    })
+    .from(goals)
+    .leftJoin(services, eq(goals.serviceId, services.id))
+    .where(eq(goals.id, id));
 
-  if (deletedGoals.length === 0) {
+  const goal = goalResult[0];
+
+  if (!goal) {
     return c.json({ error: "Goal not found" }, 404);
   }
 
-  return c.json({ message: "Goal deleted" });
+  // Archive to history if it was active/completed
+  if (goal.goal.status !== "cancelled") {
+    const achievementRate = ((goal.goal.currentAmount || 0) / goal.goal.targetAmount) * 100;
+    await db.insert(goalHistory).values({
+      goalId: id,
+      serviceId: goal.goal.serviceId,
+      title: goal.goal.title,
+      goalType: goal.goal.goalType,
+      period: goal.goal.period,
+      targetAmount: goal.goal.targetAmount,
+      achievedAmount: goal.goal.currentAmount || 0,
+      achievementRate,
+      status: achievementRate >= 100 ? "completed" : "cancelled",
+      startDate: goal.goal.startDate,
+      endDate: goal.goal.endDate,
+      completedAt: new Date().toISOString(),
+    });
+  }
+
+  const deletedGoals = await db.delete(goals).where(eq(goals.id, id)).returning();
+
+  return c.json({ message: "Goal deleted and archived" });
+});
+
+// Get goal achievement history
+goalsRouter.get("/history", async (c) => {
+  const { serviceId, status, limit = "50" } = c.req.query();
+
+  let query = db
+    .select({
+      history: goalHistory,
+      serviceName: services.name,
+    })
+    .from(goalHistory)
+    .leftJoin(services, eq(goalHistory.serviceId, services.id))
+    .orderBy(desc(goalHistory.completedAt))
+    .limit(parseInt(limit));
+
+  const results = await query;
+
+  let history = results.map((r) => ({
+    ...r.history,
+    serviceName: r.serviceName || "All Services",
+  }));
+
+  // Filter by status if provided
+  if (status) {
+    history = history.filter((h) => h.status === status);
+  }
+
+  // Filter by service if provided
+  if (serviceId) {
+    history = history.filter((h) => h.serviceId === parseInt(serviceId));
+  }
+
+  // Calculate summary stats
+  const totalGoals = history.length;
+  const completedGoals = history.filter((h) => h.status === "completed").length;
+  const missedGoals = history.filter((h) => h.status === "missed").length;
+  const avgAchievementRate = history.length > 0
+    ? history.reduce((sum, h) => sum + h.achievementRate, 0) / history.length
+    : 0;
+
+  return c.json({
+    history,
+    summary: {
+      totalGoals,
+      completedGoals,
+      missedGoals,
+      avgAchievementRate: Math.round(avgAchievementRate * 10) / 10,
+      successRate: totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0,
+    },
+  });
+});
+
+// Mark goal as complete (moves to history)
+goalsRouter.post("/:id/complete", authMiddleware, async (c) => {
+  const id = parseInt(c.req.param("id"));
+  const body = await c.req.json();
+  const { notes } = body;
+
+  const goalResult = await db
+    .select({
+      goal: goals,
+      serviceName: services.name,
+    })
+    .from(goals)
+    .leftJoin(services, eq(goals.serviceId, services.id))
+    .where(eq(goals.id, id));
+
+  const goal = goalResult[0];
+
+  if (!goal) {
+    return c.json({ error: "Goal not found" }, 404);
+  }
+
+  const achievementRate = ((goal.goal.currentAmount || 0) / goal.goal.targetAmount) * 100;
+  const status = achievementRate >= 100 ? "completed" : "missed";
+
+  // Archive to history
+  const historyEntry = await db.insert(goalHistory).values({
+    goalId: id,
+    serviceId: goal.goal.serviceId,
+    title: goal.goal.title,
+    goalType: goal.goal.goalType,
+    period: goal.goal.period,
+    targetAmount: goal.goal.targetAmount,
+    achievedAmount: goal.goal.currentAmount || 0,
+    achievementRate,
+    status,
+    startDate: goal.goal.startDate,
+    endDate: goal.goal.endDate,
+    completedAt: new Date().toISOString(),
+    notes,
+  }).returning();
+
+  // Update goal status
+  await db
+    .update(goals)
+    .set({
+      status,
+      updatedAt: new Date().toISOString(),
+    })
+    .where(eq(goals.id, id));
+
+  return c.json({
+    success: true,
+    message: `Goal marked as ${status}`,
+    historyEntry: historyEntry[0],
+    achievementRate,
+  });
 });
 
 export default goalsRouter;

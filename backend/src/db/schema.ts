@@ -104,6 +104,25 @@ export const goals = sqliteTable("goals", {
   updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
 });
 
+// ============ GOAL HISTORY (Achievement Tracking) ============
+export const goalHistory = sqliteTable("goal_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  goalId: integer("goal_id").references(() => goals.id),
+  serviceId: integer("service_id").references(() => services.id),
+  title: text("title").notNull(),
+  goalType: text("goal_type").notNull(),
+  period: text("period").notNull(),
+  targetAmount: real("target_amount").notNull(),
+  achievedAmount: real("achieved_amount").notNull(),
+  achievementRate: real("achievement_rate").notNull(), // percentage
+  status: text("status").notNull(), // completed, missed, cancelled
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  completedAt: text("completed_at").notNull(),
+  notes: text("notes"),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+});
+
 // ============ TRANSACTIONS (Audit Log) ============
 export const transactions = sqliteTable("transactions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -173,9 +192,21 @@ export const madeniPaymentsRelations = relations(madeniPayments, ({ one }) => ({
   }),
 }));
 
-export const goalsRelations = relations(goals, ({ one }) => ({
+export const goalsRelations = relations(goals, ({ one, many }) => ({
   service: one(services, {
     fields: [goals.serviceId],
+    references: [services.id],
+  }),
+  history: many(goalHistory),
+}));
+
+export const goalHistoryRelations = relations(goalHistory, ({ one }) => ({
+  goal: one(goals, {
+    fields: [goalHistory.goalId],
+    references: [goals.id],
+  }),
+  service: one(services, {
+    fields: [goalHistory.serviceId],
     references: [services.id],
   }),
 }));
@@ -195,6 +226,8 @@ export type MadeniPayment = typeof madeniPayments.$inferSelect;
 export type NewMadeniPayment = typeof madeniPayments.$inferInsert;
 export type Goal = typeof goals.$inferSelect;
 export type NewGoal = typeof goals.$inferInsert;
+export type GoalHistory = typeof goalHistory.$inferSelect;
+export type NewGoalHistory = typeof goalHistory.$inferInsert;
 export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
 export type Setting = typeof settings.$inferSelect;

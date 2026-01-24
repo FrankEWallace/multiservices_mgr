@@ -177,14 +177,14 @@ DELETE /api/goals/{id}            - Delete goal
 - [x] Add debtor form
 - [x] Record payment form
 - [x] Payment history
-- [ ] Send reminder (email/SMS placeholder)
+- [x] Send reminder (email/SMS placeholder)
 - [x] Debt aging analysis
 
 #### 3.5 Goal Management
 - [x] Create goal form
 - [x] Goal types (daily/weekly/monthly/yearly)
 - [x] Progress tracking
-- [ ] Goal achievement history
+- [x] Goal achievement history
 
 ---
 

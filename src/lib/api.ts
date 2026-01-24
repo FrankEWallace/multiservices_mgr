@@ -199,6 +199,11 @@ export const debtsApi = {
     }),
   delete: (id: number) =>
     apiFetch<{ message: string }>(`/debts/${id}`, { method: "DELETE" }),
+  sendReminder: (id: number, data: { method: "email" | "sms"; customMessage?: string }) =>
+    apiFetch<{ success: boolean; message: string; details: ReminderDetails }>(`/debts/${id}/reminder`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 // Keep madeniApi as alias for backwards compatibility
@@ -217,6 +222,13 @@ export const goalsApi = {
       goals: GoalProgress[];
       summary: { total: number; achieved: number; onTrack: number; behind: number; overallProgress: number };
     }>("/goals/progress"),
+  getHistory: (serviceId?: number, status?: string, limit?: number) => {
+    const params = new URLSearchParams();
+    if (serviceId) params.append("serviceId", serviceId.toString());
+    if (status) params.append("status", status);
+    if (limit) params.append("limit", limit.toString());
+    return apiFetch<{ history: GoalHistory[]; summary: GoalHistorySummary }>(`/goals/history?${params.toString()}`);
+  },
   getOne: (id: number) => apiFetch<{ goal: Goal }>(`/goals/${id}`),
   create: (data: Partial<Goal>) =>
     apiFetch<{ goal: Goal }>("/goals", {
@@ -233,6 +245,14 @@ export const goalsApi = {
       method: "PATCH",
       body: JSON.stringify({ currentAmount }),
     }),
+  complete: (id: number, notes?: string) =>
+    apiFetch<{ success: boolean; message: string; historyEntry: GoalHistory; achievementRate: number }>(
+      `/goals/${id}/complete`,
+      {
+        method: "POST",
+        body: JSON.stringify({ notes }),
+      }
+    ),
   delete: (id: number) =>
     apiFetch<{ message: string }>(`/goals/${id}`, { method: "DELETE" }),
 };
@@ -437,6 +457,14 @@ export interface AgingReport {
   color: string;
 }
 
+export interface ReminderDetails {
+  method: string;
+  recipient: string;
+  debtorName: string;
+  balance: number;
+  sentAt: string;
+}
+
 export interface Goal {
   id: number;
   serviceId?: number;
@@ -453,6 +481,33 @@ export interface Goal {
   progress?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface GoalHistory {
+  id: number;
+  goalId?: number;
+  serviceId?: number;
+  serviceName?: string;
+  title: string;
+  goalType: string;
+  period: string;
+  targetAmount: number;
+  achievedAmount: number;
+  achievementRate: number;
+  status: string;
+  startDate: string;
+  endDate: string;
+  completedAt: string;
+  notes?: string;
+  createdAt?: string;
+}
+
+export interface GoalHistorySummary {
+  totalGoals: number;
+  completedGoals: number;
+  missedGoals: number;
+  avgAchievementRate: number;
+  successRate: number;
 }
 
 // ============ SETTINGS TYPES ============
