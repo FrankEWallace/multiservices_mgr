@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ const navItems = [
   { icon: Receipt, label: "Expenses", path: "/expenses" },
   { icon: Target, label: "Goals", path: "/goals" },
   { icon: CreditCard, label: "Debts", path: "/madeni" },
+  { icon: BarChart3, label: "Analytics", path: "/analytics" },
   { icon: TrendingUp, label: "Projections", path: "/projections" },
   { icon: FileText, label: "Reports", path: "/reports" },
   { icon: Settings, label: "Settings", path: "/settings" },

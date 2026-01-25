@@ -14,6 +14,7 @@ import Expenses from "./pages/Expenses";
 import Projections from "./pages/Projections";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
               <Route path="/projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

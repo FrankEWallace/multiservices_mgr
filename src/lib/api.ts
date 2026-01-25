@@ -576,3 +576,151 @@ export const settingsApi = {
       method: "DELETE",
     }),
 };
+
+// ============ ANALYTICS TYPES ============
+export interface ProfitMargin {
+  serviceId: number;
+  serviceName: string;
+  serviceColor: string;
+  totalRevenue: number;
+  totalExpenses: number;
+  grossProfit: number;
+  profitMargin: number;
+  revenueCount: number;
+  expenseCount: number;
+}
+
+export interface ProfitabilityRanking {
+  rank: number;
+  serviceId: number;
+  serviceName: string;
+  serviceColor: string;
+  revenue: number;
+  expenses: number;
+  profit: number;
+  profitMargin: number;
+  revenueShare: number;
+  profitShare: number;
+  roi: number;
+  trend: "up" | "down" | "stable";
+  previousProfit: number;
+}
+
+export interface CashFlowData {
+  month: string;
+  inflows: number;
+  outflows: number;
+  netCashFlow: number;
+  cumulativeCashFlow: number;
+  inflowCount: number;
+  outflowCount: number;
+}
+
+export interface CashFlowSummary {
+  totalInflows: number;
+  totalOutflows: number;
+  netCashFlow: number;
+  averageMonthlyNet: number;
+  bestMonth: { month: string; net: number };
+  worstMonth: { month: string; net: number };
+}
+
+export interface AnalyticsTrendData {
+  period: string;
+  revenue: number;
+  movingAverage: number;
+  trend: "upward" | "downward" | "stable";
+  momentum: number;
+}
+
+export interface TrendSummary {
+  overallTrend: "upward" | "downward" | "stable";
+  averageGrowth: number;
+  volatility: number;
+  seasonalPatterns: { highSeason: string[]; lowSeason: string[] };
+}
+
+export interface Anomaly {
+  id: number;
+  type: "revenue" | "expense";
+  date: string;
+  amount: number;
+  expectedAmount: number;
+  deviation: number;
+  deviationPercent: number;
+  severity: "low" | "medium" | "high";
+  serviceName?: string;
+  description?: string;
+  category?: string;
+}
+
+export interface AnomalyStats {
+  totalAnomalies: number;
+  revenueAnomalies: number;
+  expenseAnomalies: number;
+  avgDeviation: number;
+  severityDistribution: { low: number; medium: number; high: number };
+}
+
+// ============ ANALYTICS API ============
+export const analyticsApi = {
+  // Profit margin analysis per service
+  getProfitMargins: (period?: string, serviceId?: number) => {
+    const params = new URLSearchParams();
+    if (period) params.append("period", period);
+    if (serviceId) params.append("serviceId", serviceId.toString());
+    return apiFetch<{
+      margins: ProfitMargin[];
+      overall: { totalRevenue: number; totalExpenses: number; grossProfit: number; overallMargin: number };
+      period: string;
+    }>(`/analytics/profit-margins?${params.toString()}`);
+  },
+
+  // Service profitability ranking
+  getProfitabilityRanking: (period?: string, limit?: number) => {
+    const params = new URLSearchParams();
+    if (period) params.append("period", period);
+    if (limit) params.append("limit", limit.toString());
+    return apiFetch<{
+      rankings: ProfitabilityRanking[];
+      period: string;
+      totalServices: number;
+    }>(`/analytics/profitability-ranking?${params.toString()}`);
+  },
+
+  // Cash flow analysis
+  getCashFlow: (months?: number) => {
+    const params = new URLSearchParams();
+    if (months) params.append("months", months.toString());
+    return apiFetch<{
+      cashFlow: CashFlowData[];
+      summary: CashFlowSummary;
+      period: string;
+    }>(`/analytics/cash-flow?${params.toString()}`);
+  },
+
+  // Trend detection
+  getTrends: (period?: string, metric?: string) => {
+    const params = new URLSearchParams();
+    if (period) params.append("period", period);
+    if (metric) params.append("metric", metric);
+    return apiFetch<{
+      trends: AnalyticsTrendData[];
+      summary: TrendSummary;
+      metric: string;
+      period: string;
+    }>(`/analytics/trends?${params.toString()}`);
+  },
+
+  // Anomaly detection
+  getAnomalies: (type?: string, severity?: string, limit?: number) => {
+    const params = new URLSearchParams();
+    if (type) params.append("type", type);
+    if (severity) params.append("severity", severity);
+    if (limit) params.append("limit", limit.toString());
+    return apiFetch<{
+      anomalies: Anomaly[];
+      stats: AnomalyStats;
+    }>(`/analytics/anomalies?${params.toString()}`);
+  },
+};

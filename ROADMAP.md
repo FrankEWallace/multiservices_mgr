@@ -196,12 +196,12 @@ DELETE /api/goals/{id}            - Delete goal
 - [x] Drill-down capabilities (click KPIs to see detailed breakdown)
 - [x] Comparison views (YoY, MoM, WoW with ComparisonView component)
 
-#### 4.2 Advanced Analytics
-- [ ] Profit margin analysis
-- [ ] Service profitability ranking
-- [ ] Cash flow analysis
-- [ ] Trend detection
-- [ ] Anomaly detection
+#### 4.2 Advanced Analytics ✅
+- [x] Profit margin analysis (per-service gross profit margin calculation)
+- [x] Service profitability ranking (ranked by profit, margin, ROI with trend)
+- [x] Cash flow analysis (monthly inflows/outflows, cumulative, best/worst months)
+- [x] Trend detection (moving averages, momentum, seasonal patterns)
+- [x] Anomaly detection (statistical deviation analysis with severity levels)
 
 #### 4.3 Projections & Forecasting
 - [ ] Revenue forecasting (time series)
