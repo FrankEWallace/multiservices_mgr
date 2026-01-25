@@ -14,6 +14,7 @@ import goalsRoutes from "./routes/goals";
 import settingsRoutes from "./routes/settings";
 import analyticsRoutes from "./routes/analytics";
 import forecastingRoutes from "./routes/forecasting";
+import insightsRoutes from "./routes/insights";
 
 const app = new Hono();
 
@@ -48,6 +49,7 @@ app.route("/api/goals", goalsRoutes);
 app.route("/api/settings", settingsRoutes);
 app.route("/api/analytics", analyticsRoutes);
 app.route("/api/forecasting", forecastingRoutes);
+app.route("/api/insights", insightsRoutes);
 
 // 404 handler
 app.notFound((c) => {

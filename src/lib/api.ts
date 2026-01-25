@@ -943,3 +943,160 @@ export const forecastingApi = {
     }>(`/forecasting/by-service?${params.toString()}`);
   },
 };
+
+// ============ INSIGHTS TYPES ============
+export type InsightSeverity = "critical" | "warning" | "info" | "success";
+export type InsightCategory = "revenue" | "expense" | "profit" | "debt" | "goal" | "service" | "trend" | "anomaly";
+
+export interface AIInsight {
+  id: string;
+  title: string;
+  description: string;
+  category: InsightCategory;
+  severity: InsightSeverity;
+  metric?: string;
+  value?: number | string;
+  change?: number;
+  recommendation?: string;
+  actionUrl?: string;
+  timestamp: string;
+}
+
+export interface InsightsResponse {
+  period: string;
+  dateRange: { start: string; end: string };
+  totalInsights: number;
+  bySeverity: {
+    critical: number;
+    warning: number;
+    success: number;
+    info: number;
+  };
+  insights: AIInsight[];
+}
+
+export interface Recommendation {
+  id: string;
+  title: string;
+  description: string;
+  impact: "high" | "medium" | "low";
+  effort: "high" | "medium" | "low";
+  category: InsightCategory;
+  priority: number;
+  expectedBenefit?: string;
+  steps?: string[];
+}
+
+export interface RecommendationsResponse {
+  totalRecommendations: number;
+  byImpact: {
+    high: number;
+    medium: number;
+    low: number;
+  };
+  recommendations: Recommendation[];
+}
+
+export type AlertType = "threshold" | "anomaly" | "trend" | "deadline" | "reminder";
+
+export interface Alert {
+  id: string;
+  type: AlertType;
+  title: string;
+  message: string;
+  severity: InsightSeverity;
+  triggered: boolean;
+  triggeredAt?: string;
+  condition: string;
+  value?: number | string;
+  threshold?: number | string;
+}
+
+export interface AlertsResponse {
+  totalAlerts: number;
+  bySeverity: {
+    critical: number;
+    warning: number;
+    info: number;
+  };
+  byType: {
+    threshold: number;
+    anomaly: number;
+    deadline: number;
+    reminder: number;
+  };
+  alerts: Alert[];
+}
+
+export interface WeeklySummary {
+  period: {
+    start: string;
+    end: string;
+    weekNumber: number;
+  };
+  summary: {
+    revenue: {
+      current: number;
+      previous: number;
+      change: number;
+      formatted: string;
+    };
+    expenses: {
+      current: number;
+      previous: number;
+      change: number;
+      formatted: string;
+    };
+    profit: {
+      current: number;
+      previous: number;
+      change: number;
+      formatted: string;
+      margin: number;
+    };
+    debtCollected: {
+      amount: number;
+      formatted: string;
+    };
+  };
+  dailyBreakdown: {
+    revenue: { date: string; dayName: string; amount: number }[];
+    expenses: { date: string; dayName: string; amount: number }[];
+  };
+  servicePerformance: {
+    name: string;
+    color: string;
+    revenue: number;
+    share: string | number;
+  }[];
+  topTransactions: {
+    revenue: { amount: number; description: string | null; date: string; service: string | null }[];
+    expenses: { amount: number; description: string | null; category: string; date: string }[];
+  };
+  goalsProgress: {
+    name: string;
+    progress: string | number;
+    type: string;
+  }[];
+  highlights: string[];
+  generatedAt: string;
+}
+
+// ============ INSIGHTS API ============
+export const insightsApi = {
+  // Get AI-generated insights
+  getInsights: (period: "week" | "month" | "quarter" = "month") =>
+    apiFetch<InsightsResponse>(`/insights/insights?period=${period}`),
+
+  // Get performance recommendations
+  getRecommendations: () =>
+    apiFetch<RecommendationsResponse>("/insights/recommendations"),
+
+  // Get active alerts
+  getAlerts: () =>
+    apiFetch<AlertsResponse>("/insights/alerts"),
+
+  // Get weekly summary
+  getWeeklySummary: () =>
+    apiFetch<WeeklySummary>("/insights/weekly-summary"),
+};

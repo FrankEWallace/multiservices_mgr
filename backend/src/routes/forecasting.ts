@@ -96,7 +96,7 @@ forecasting.get("/revenue", async (c) => {
   const forecastMonths = parseInt(months);
   
   // Get historical monthly revenue
-  const historicalData = await db.all(sql`
+  const historicalData = await db.all<{ month: string; total: number }>(sql`
     SELECT 
       strftime('%Y-%m', date) as month,
       SUM(amount) as total
@@ -194,7 +194,7 @@ forecasting.get("/expenses", async (c) => {
   const forecastMonths = parseInt(months);
   
   // Get historical monthly expenses
-  const historicalData = await db.all(sql`
+  const historicalData = await db.all<{ month: string; total: number }>(sql`
     SELECT 
       strftime('%Y-%m', date) as month,
       SUM(amount) as total
@@ -205,7 +205,7 @@ forecasting.get("/expenses", async (c) => {
   `);
   
   // Get expense breakdown by category
-  const categoryData = await db.all(sql`
+  const categoryData = await db.all<{ category: string; avgAmount: number; totalAmount: number; count: number }>(sql`
     SELECT 
       category,
       AVG(amount) as avgAmount,
@@ -217,7 +217,7 @@ forecasting.get("/expenses", async (c) => {
     ORDER BY totalAmount DESC
   `);
   
-  const monthlyValues = historicalData.map((d: any) => Number(d.total));
+  const monthlyValues = historicalData.map((d) => Number(d.total));
   
   // Generate forecasts
   let forecasts: number[];
@@ -427,7 +427,7 @@ forecasting.get("/scenarios", async (c) => {
   const forecastMonths = parseInt(months);
   
   // Get baseline data
-  const revenueData = await db.all(sql`
+  const revenueData = await db.all<{ month: string; total: number }>(sql`
     SELECT 
       strftime('%Y-%m', date) as month,
       SUM(amount) as total
@@ -437,7 +437,7 @@ forecasting.get("/scenarios", async (c) => {
     ORDER BY month ASC
   `);
   
-  const expenseData = await db.all(sql`
+  const expenseData = await db.all<{ month: string; total: number }>(sql`
     SELECT 
       strftime('%Y-%m', date) as month,
       SUM(amount) as total
@@ -447,8 +447,8 @@ forecasting.get("/scenarios", async (c) => {
     ORDER BY month ASC
   `);
   
-  const revenueValues = revenueData.map((d: any) => Number(d.total));
-  const expenseValues = expenseData.map((d: any) => Number(d.total));
+  const revenueValues = revenueData.map((d) => Number(d.total));
+  const expenseValues = expenseData.map((d) => Number(d.total));
   
   const avgRevenue = revenueValues.length > 0 
     ? revenueValues.reduce((a, b) => a + b, 0) / revenueValues.length 

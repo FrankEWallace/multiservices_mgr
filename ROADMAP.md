@@ -210,11 +210,11 @@ DELETE /api/goals/{id}            - Delete goal
 - [x] Scenario planning (conservative, baseline, moderate, optimistic, aggressive)
 - [x] Seasonal analysis (monthly patterns, quarterly classification, index calculation)
 
-#### 4.4 Automated Insights
-- [ ] AI-generated insights
-- [ ] Performance recommendations
-- [ ] Alert triggers
-- [ ] Weekly summary generation
+#### 4.4 Automated Insights ✅
+- [x] AI-generated insights (trend analysis, anomaly detection, goal tracking, cash flow, seasonality)
+- [x] Performance recommendations (prioritized suggestions with impact levels)
+- [x] Alert triggers (configurable thresholds, trend alerts, deadline reminders, anomaly detection)
+- [x] Weekly summary generation (period metrics, highlights, top performers, goals progress)
 
 ---
 
