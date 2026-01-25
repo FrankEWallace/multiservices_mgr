@@ -11,6 +11,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
   FileText, 
   Download, 
   Calendar as CalendarIcon, 
@@ -27,7 +35,10 @@ import {
   CheckCircle2,
   XCircle,
   Printer,
-  RefreshCw
+  RefreshCw,
+  FileSpreadsheet,
+  FileDown,
+  ChevronDown
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -41,6 +52,10 @@ import {
   DebtsAgingReport,
   GoalsReport
 } from "@/lib/api";
+import { 
+  exportReport, 
+  type ExportFormat 
+} from "@/lib/export-utils";
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState("daily");
@@ -98,53 +113,38 @@ const Reports = () => {
     enabled: activeTab === "goals",
   });
 
-  const handlePrint = () => {
-    window.print();
+  // Get current report data based on active tab
+  const getCurrentReportData = () => {
+    switch (activeTab) {
+      case "daily": return dailyReport;
+      case "weekly": return weeklyReport;
+      case "monthly": return monthlyReport;
+      case "service": return serviceReport;
+      case "debts": return debtsAgingReport;
+      case "goals": return goalsReport;
+      default: return null;
+    }
   };
 
-  const handleExport = (reportType: string) => {
-    // For now, we'll create a simple JSON download
-    let data: unknown;
-    let filename: string;
-
-    switch (reportType) {
-      case "daily":
-        data = dailyReport;
-        filename = `daily-report-${format(selectedDate, "yyyy-MM-dd")}.json`;
-        break;
-      case "weekly":
-        data = weeklyReport;
-        filename = `weekly-report-${weeklyReport?.period.startDate}.json`;
-        break;
-      case "monthly":
-        data = monthlyReport;
-        filename = `monthly-report-${selectedYear}-${String(selectedMonth).padStart(2, "0")}.json`;
-        break;
-      case "service":
-        data = serviceReport;
-        filename = `service-report-${serviceReport?.service.name}.json`;
-        break;
-      case "debts":
-        data = debtsAgingReport;
-        filename = `debts-aging-report-${new Date().toISOString().split("T")[0]}.json`;
-        break;
-      case "goals":
-        data = goalsReport;
-        filename = `goals-report-${new Date().toISOString().split("T")[0]}.json`;
-        break;
-      default:
-        return;
+  const handleExport = (exportFormat: ExportFormat) => {
+    const data = getCurrentReportData();
+    if (!data) {
+      console.warn("No data available to export");
+      return;
     }
+    exportReport(activeTab, exportFormat, data);
+  };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const isExportDisabled = () => {
+    switch (activeTab) {
+      case "daily": return !dailyReport || dailyLoading;
+      case "weekly": return !weeklyReport || weeklyLoading;
+      case "monthly": return !monthlyReport || monthlyLoading;
+      case "service": return !serviceReport || serviceLoading || !selectedServiceId;
+      case "debts": return !debtsAgingReport || debtsLoading;
+      case "goals": return !goalsReport || goalsLoading;
+      default: return true;
+    }
   };
 
   const reportTabs = [
@@ -166,17 +166,48 @@ const Reports = () => {
             <p className="text-muted-foreground">Generate and download business reports</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2" onClick={handlePrint}>
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={() => handleExport("print")}
+              disabled={isExportDisabled()}
+            >
               <Printer className="w-4 h-4" />
               Print
             </Button>
-            <Button 
-              className="gap-2 bg-primary hover:bg-primary/90"
-              onClick={() => handleExport(activeTab)}
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  className="gap-2 bg-primary hover:bg-primary/90"
+                  disabled={isExportDisabled()}
+                >
+                  <Download className="w-4 h-4" />
+                  Export
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExport("pdf")} className="gap-2 cursor-pointer">
+                  <FileText className="w-4 h-4 text-red-500" />
+                  PDF Document
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("excel")} className="gap-2 cursor-pointer">
+                  <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                  Excel Spreadsheet
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("csv")} className="gap-2 cursor-pointer">
+                  <FileDown className="w-4 h-4 text-blue-500" />
+                  CSV File
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExport("print")} className="gap-2 cursor-pointer">
+                  <Printer className="w-4 h-4 text-gray-500" />
+                  Print Preview
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

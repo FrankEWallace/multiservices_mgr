@@ -228,11 +228,11 @@ DELETE /api/goals/{id}            - Delete goal
 - [x] Debts aging report (aging buckets, top debtors, collection analysis)
 - [x] Goal achievement report (active goals, history, success rates)
 
-#### 5.2 Export Options
-- [ ] PDF generation (ReportLab)
-- [ ] Excel export (openpyxl)
-- [ ] CSV export
-- [ ] Print-friendly views
+#### 5.2 Export Options ✅
+- [x] PDF generation (jsPDF + jspdf-autotable)
+- [x] Excel export (xlsx/SheetJS)
+- [x] CSV export
+- [x] Print-friendly views
 
 #### 5.3 Scheduled Reports
 - [ ] Report scheduling setup
