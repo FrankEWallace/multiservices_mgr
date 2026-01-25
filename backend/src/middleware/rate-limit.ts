@@ -91,22 +91,22 @@ export function rateLimiter(options: RateLimitOptions = {}) {
   };
 }
 
-// Stricter rate limiter for auth endpoints
+// Rate limiter for auth endpoints - generous for development
 export const authRateLimiter = rateLimiter({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 attempts per 15 minutes
-  message: "Too many login attempts. Please try again in 15 minutes.",
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30, // 30 attempts per minute
+  message: "Too many login attempts. Please try again in a minute.",
 });
 
-// Standard API rate limiter
+// Standard API rate limiter - generous for development
 export const apiRateLimiter = rateLimiter({
   windowMs: 60 * 1000, // 1 minute
-  max: 100, // 100 requests per minute
+  max: 500, // 500 requests per minute
 });
 
-// Stricter limiter for expensive operations
+// Stricter limiter for expensive operations (reports, exports)
 export const expensiveRateLimiter = rateLimiter({
   windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute
+  max: 30, // 30 requests per minute
   message: "Too many requests for this operation. Please wait.",
 });
