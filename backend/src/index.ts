@@ -24,17 +24,13 @@ import scheduledReportsRoutes from "./routes/scheduled-reports";
 
 const app = new Hono();
 
-// Security middleware (applied first)
-app.use("*", securityHeaders());
-app.use("*", removeSensitiveHeaders());
-
-// Logging
+// Logging (first for debugging)
 app.use("*", logger());
 
-// CORS configuration
+// CORS configuration - MUST be before other middleware to handle preflight
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:8080", "http://localhost:5173"];
+  : ["http://localhost:8080", "http://localhost:5173", "http://localhost:8082"];
 
 app.use(
   "*",
@@ -47,6 +43,10 @@ app.use(
     maxAge: 86400, // 24 hours
   })
 );
+
+// Security middleware (after CORS)
+app.use("*", securityHeaders());
+app.use("*", removeSensitiveHeaders());
 
 // Rate limiting for auth endpoints
 app.use("/api/auth/*", authRateLimiter);
