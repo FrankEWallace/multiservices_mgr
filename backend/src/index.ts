@@ -3,6 +3,10 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { serve } from "@hono/node-server";
 
+// Import middleware
+import { securityHeaders, removeSensitiveHeaders } from "./middleware/security";
+import { apiRateLimiter, authRateLimiter } from "./middleware/rate-limit";
+
 // Import routes
 import authRoutes from "./routes/auth";
 import dashboardRoutes from "./routes/dashboard";
@@ -20,15 +24,35 @@ import scheduledReportsRoutes from "./routes/scheduled-reports";
 
 const app = new Hono();
 
-// Middleware
+// Security middleware (applied first)
+app.use("*", securityHeaders());
+app.use("*", removeSensitiveHeaders());
+
+// Logging
 app.use("*", logger());
+
+// CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:8080", "http://localhost:5173"];
+
 app.use(
   "*",
   cors({
-    origin: ["http://localhost:8080", "http://localhost:5173"],
+    origin: allowedOrigins,
     credentials: true,
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+    maxAge: 86400, // 24 hours
   })
 );
+
+// Rate limiting for auth endpoints
+app.use("/api/auth/*", authRateLimiter);
+
+// Rate limiting for all other API endpoints
+app.use("/api/*", apiRateLimiter);
 
 // Health check
 app.get("/", (c) => {

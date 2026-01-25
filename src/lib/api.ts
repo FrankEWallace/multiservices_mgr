@@ -16,10 +16,35 @@ export const setAuthToken = (token: string | null) => {
 
 export const getAuthToken = () => authToken;
 
-// API fetch wrapper
+// Custom API error class
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code?: string,
+    public retryAfter?: number
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+// Rate limit handling
+interface RateLimitInfo {
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+let rateLimitInfo: RateLimitInfo | null = null;
+
+export const getRateLimitInfo = () => rateLimitInfo;
+
+// API fetch wrapper with improved error handling
 async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retries = 2
 ): Promise<T> {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -30,24 +55,68 @@ async function apiFetch<T>(
     (headers as Record<string, string>)["Authorization"] = `Bearer ${authToken}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Unknown error" }));
+    // Update rate limit info from headers
+    const limitHeader = response.headers.get("X-RateLimit-Limit");
+    const remainingHeader = response.headers.get("X-RateLimit-Remaining");
+    const resetHeader = response.headers.get("X-RateLimit-Reset");
     
-    // Handle 401 - clear token and redirect to login
-    if (response.status === 401) {
-      setAuthToken(null);
-      window.location.href = "/login";
+    if (limitHeader && remainingHeader && resetHeader) {
+      rateLimitInfo = {
+        limit: parseInt(limitHeader, 10),
+        remaining: parseInt(remainingHeader, 10),
+        reset: parseInt(resetHeader, 10),
+      };
     }
-    
-    throw new Error(error.error || `API Error: ${response.status}`);
-  }
 
-  return response.json();
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: "Unknown error" }));
+      
+      // Handle 401 - clear token and redirect to login
+      if (response.status === 401) {
+        setAuthToken(null);
+        window.location.href = "/login";
+        throw new ApiError("Session expired. Please login again.", 401, "UNAUTHORIZED");
+      }
+
+      // Handle 429 - rate limited
+      if (response.status === 429) {
+        const retryAfter = parseInt(response.headers.get("Retry-After") || "60", 10);
+        throw new ApiError(
+          error.error || "Too many requests. Please try again later.",
+          429,
+          "RATE_LIMITED",
+          retryAfter
+        );
+      }
+
+      // Handle 5xx - server errors with retry
+      if (response.status >= 500 && retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (3 - retries)));
+        return apiFetch<T>(endpoint, options, retries - 1);
+      }
+
+      throw new ApiError(
+        error.error || `API Error: ${response.status}`,
+        response.status,
+        error.code
+      );
+    }
+
+    return response.json();
+  } catch (error) {
+    // Network errors - retry
+    if (error instanceof TypeError && error.message === "Failed to fetch" && retries > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * (3 - retries)));
+      return apiFetch<T>(endpoint, options, retries - 1);
+    }
+    throw error;
+  }
 }
 
 // Auth API
