@@ -1535,6 +1535,79 @@ export interface GoalsReport {
   }[];
 }
 
+// ============ SCHEDULED REPORTS TYPES ============
+export interface ScheduledReport {
+  id: number;
+  userId: number | null;
+  name: string;
+  reportType: string;
+  serviceId: number | null;
+  serviceName: string | null;
+  schedule: "daily" | "weekly" | "monthly";
+  scheduleTime: string | null;
+  scheduleDay: number | null;
+  exportFormat: string | null;
+  emailDelivery: boolean | null;
+  emailRecipients: string[];
+  isActive: boolean | null;
+  lastRunAt: string | null;
+  nextRunAt: string | null;
+  createdAt: string | null;
+  updatedAt?: string | null;
+}
+
+export interface CreateScheduledReport {
+  name: string;
+  reportType: string;
+  serviceId?: number | null;
+  schedule: "daily" | "weekly" | "monthly";
+  scheduleTime?: string;
+  scheduleDay?: number | null;
+  exportFormat?: string;
+  emailDelivery?: boolean;
+  emailRecipients?: string[];
+}
+
+export interface ReportHistoryItem {
+  id: number;
+  userId: number | null;
+  scheduledReportId: number | null;
+  scheduleName: string | null;
+  reportType: string;
+  reportName: string;
+  exportFormat: string;
+  parameters: Record<string, unknown> | null;
+  status: string | null;
+  errorMessage: string | null;
+  fileSize: number | null;
+  fileSizeFormatted: string | null;
+  filePath: string | null;
+  emailSent: boolean | null;
+  emailSentTo: string[];
+  generatedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface ScheduledReportsStats {
+  totalSchedules: number;
+  activeSchedules: number;
+  inactiveSchedules: number;
+  byReportType: Record<string, number>;
+  bySchedule: Record<string, number>;
+  last30Days: {
+    totalReports: number;
+    failedReports: number;
+    successRate: string;
+  };
+}
+
+export interface UpcomingSchedule {
+  id: number;
+  name: string;
+  reportType: string;
+  nextRunAt: string | null;
+}
+
 // ============ REPORTS API ============
 export const reportsApi = {
   // Get available report types
@@ -1574,4 +1647,78 @@ export const reportsApi = {
   // Goal Achievement Report
   getGoals: (period?: string) =>
     apiFetch<GoalsReport>(`/reports/goals${period ? `?period=${period}` : ""}`),
+};
+
+// ============ SCHEDULED REPORTS API ============
+export const scheduledReportsApi = {
+  // Get all scheduled reports
+  getAll: () =>
+    apiFetch<{ schedules: ScheduledReport[] }>("/scheduled-reports"),
+
+  // Get single scheduled report
+  getOne: (id: number) =>
+    apiFetch<{ schedule: ScheduledReport }>(`/scheduled-reports/${id}`),
+
+  // Create new scheduled report
+  create: (data: CreateScheduledReport) =>
+    apiFetch<{ schedule: ScheduledReport; message: string }>("/scheduled-reports", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Update scheduled report
+  update: (id: number, data: Partial<CreateScheduledReport & { isActive?: boolean }>) =>
+    apiFetch<{ schedule: ScheduledReport; message: string }>(`/scheduled-reports/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // Delete scheduled report
+  delete: (id: number) =>
+    apiFetch<{ message: string }>(`/scheduled-reports/${id}`, {
+      method: "DELETE",
+    }),
+
+  // Toggle active status
+  toggle: (id: number) =>
+    apiFetch<{ isActive: boolean; message: string }>(`/scheduled-reports/${id}/toggle`, {
+      method: "POST",
+    }),
+
+  // Manually run a scheduled report
+  run: (id: number) =>
+    apiFetch<{ historyEntry: ReportHistoryItem; message: string }>(`/scheduled-reports/${id}/run`, {
+      method: "POST",
+    }),
+
+  // Get report history (all)
+  getHistory: (params?: { limit?: number; offset?: number; reportType?: string; status?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.offset) searchParams.append("offset", params.offset.toString());
+    if (params?.reportType) searchParams.append("reportType", params.reportType);
+    if (params?.status) searchParams.append("status", params.status);
+    const query = searchParams.toString();
+    return apiFetch<{ history: ReportHistoryItem[]; total: number; limit: number; offset: number }>(
+      `/scheduled-reports/history/all${query ? `?${query}` : ""}`
+    );
+  },
+
+  // Get history for specific schedule
+  getScheduleHistory: (scheduleId: number, limit?: number) =>
+    apiFetch<{ history: ReportHistoryItem[] }>(
+      `/scheduled-reports/${scheduleId}/history${limit ? `?limit=${limit}` : ""}`
+    ),
+
+  // Delete history entry
+  deleteHistory: (historyId: number) =>
+    apiFetch<{ message: string }>(`/scheduled-reports/history/${historyId}`, {
+      method: "DELETE",
+    }),
+
+  // Get statistics
+  getStats: () =>
+    apiFetch<{ stats: ScheduledReportsStats; upcomingSchedules: UpcomingSchedule[] }>(
+      "/scheduled-reports/stats/summary"
+    ),
 };

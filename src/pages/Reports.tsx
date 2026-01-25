@@ -56,6 +56,7 @@ import {
   exportReport, 
   type ExportFormat 
 } from "@/lib/export-utils";
+import { ScheduledReports } from "@/components/reports/ScheduledReports";
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState("daily");
@@ -136,6 +137,7 @@ const Reports = () => {
   };
 
   const isExportDisabled = () => {
+    if (activeTab === "scheduled") return true; // No export for scheduled tab
     switch (activeTab) {
       case "daily": return !dailyReport || dailyLoading;
       case "weekly": return !weeklyReport || weeklyLoading;
@@ -154,6 +156,7 @@ const Reports = () => {
     { id: "service", label: "Service", icon: PieChart },
     { id: "debts", label: "Debts Aging", icon: Clock },
     { id: "goals", label: "Goals", icon: Target },
+    { id: "scheduled", label: "Scheduled", icon: Clock },
   ];
 
   return (
@@ -213,7 +216,7 @@ const Reports = () => {
 
         {/* Report Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-6 w-full print:hidden">
+          <TabsList className="grid grid-cols-7 w-full print:hidden">
             {reportTabs.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
                 <tab.icon className="w-4 h-4" />
@@ -441,6 +444,11 @@ const Reports = () => {
             ) : (
               <EmptyReport message="No goals data available" />
             )}
+          </TabsContent>
+
+          {/* Scheduled Reports Tab */}
+          <TabsContent value="scheduled" className="space-y-4">
+            <ScheduledReports />
           </TabsContent>
         </Tabs>
       </div>

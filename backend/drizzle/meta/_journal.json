@@ -8,6 +8,13 @@
       "when": 1769250387680,
       "tag": "0000_sharp_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1769375952559,
+      "tag": "0001_futuristic_firebrand",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,60 @@
+CREATE TABLE `goal_history` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`goal_id` integer,
+	`service_id` integer,
+	`title` text NOT NULL,
+	`goal_type` text NOT NULL,
+	`period` text NOT NULL,
+	`target_amount` real NOT NULL,
+	`achieved_amount` real NOT NULL,
+	`achievement_rate` real NOT NULL,
+	`status` text NOT NULL,
+	`start_date` text NOT NULL,
+	`end_date` text NOT NULL,
+	`completed_at` text NOT NULL,
+	`notes` text,
+	`created_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	FOREIGN KEY (`goal_id`) REFERENCES `goals`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `report_history` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`user_id` integer,
+	`scheduled_report_id` integer,
+	`report_type` text NOT NULL,
+	`report_name` text NOT NULL,
+	`export_format` text NOT NULL,
+	`parameters` text,
+	`status` text DEFAULT 'completed',
+	`error_message` text,
+	`file_size` integer,
+	`file_path` text,
+	`email_sent` integer DEFAULT false,
+	`email_sent_to` text,
+	`generated_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	`expires_at` text,
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`scheduled_report_id`) REFERENCES `scheduled_reports`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `scheduled_reports` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`user_id` integer,
+	`name` text NOT NULL,
+	`report_type` text NOT NULL,
+	`service_id` integer,
+	`schedule` text NOT NULL,
+	`schedule_time` text DEFAULT '09:00',
+	`schedule_day` integer,
+	`export_format` text DEFAULT 'pdf',
+	`email_delivery` integer DEFAULT false,
+	`email_recipients` text,
+	`is_active` integer DEFAULT true,
+	`last_run_at` text,
+	`next_run_at` text,
+	`created_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	`updated_at` text DEFAULT 'CURRENT_TIMESTAMP',
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON UPDATE no action ON DELETE no action
+);

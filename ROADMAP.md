@@ -234,10 +234,10 @@ DELETE /api/goals/{id}            - Delete goal
 - [x] CSV export
 - [x] Print-friendly views
 
-#### 5.3 Scheduled Reports
-- [ ] Report scheduling setup
-- [ ] Email delivery (placeholder)
-- [ ] Report history
+#### 5.3 Scheduled Reports ✅
+- [x] Report scheduling setup (CRUD for schedules, daily/weekly/monthly)
+- [x] Email delivery (placeholder with UI)
+- [x] Report history (generation tracking, status, file management)
 
 ---
 

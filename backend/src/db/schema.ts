@@ -151,6 +151,45 @@ export const settings = sqliteTable("settings", {
   updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
 });
 
+// ============ SCHEDULED REPORTS ============
+export const scheduledReports = sqliteTable("scheduled_reports", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").references(() => users.id),
+  name: text("name").notNull(),
+  reportType: text("report_type").notNull(), // daily, weekly, monthly, service, debts, goals
+  serviceId: integer("service_id").references(() => services.id), // For service-specific reports
+  schedule: text("schedule").notNull(), // cron-like: daily, weekly, monthly, custom
+  scheduleTime: text("schedule_time").default("09:00"), // HH:MM format
+  scheduleDay: integer("schedule_day"), // Day of week (0-6) or day of month (1-31)
+  exportFormat: text("export_format").default("pdf"), // pdf, excel, csv
+  emailDelivery: integer("email_delivery", { mode: "boolean" }).default(false),
+  emailRecipients: text("email_recipients"), // JSON array of email addresses
+  isActive: integer("is_active", { mode: "boolean" }).default(true),
+  lastRunAt: text("last_run_at"),
+  nextRunAt: text("next_run_at"),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").default("CURRENT_TIMESTAMP"),
+});
+
+// ============ REPORT HISTORY ============
+export const reportHistory = sqliteTable("report_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").references(() => users.id),
+  scheduledReportId: integer("scheduled_report_id").references(() => scheduledReports.id),
+  reportType: text("report_type").notNull(),
+  reportName: text("report_name").notNull(),
+  exportFormat: text("export_format").notNull(),
+  parameters: text("parameters"), // JSON: date ranges, service ID, etc.
+  status: text("status").default("completed"), // pending, generating, completed, failed
+  errorMessage: text("error_message"),
+  fileSize: integer("file_size"), // bytes
+  filePath: text("file_path"), // Local path or URL
+  emailSent: integer("email_sent", { mode: "boolean" }).default(false),
+  emailSentTo: text("email_sent_to"), // JSON array
+  generatedAt: text("generated_at").default("CURRENT_TIMESTAMP"),
+  expiresAt: text("expires_at"), // When the report file will be deleted
+});
+
 // ============ RELATIONS ============
 export const servicesRelations = relations(services, ({ many }) => ({
   revenues: many(revenues),
@@ -211,6 +250,29 @@ export const goalHistoryRelations = relations(goalHistory, ({ one }) => ({
   }),
 }));
 
+export const scheduledReportsRelations = relations(scheduledReports, ({ one, many }) => ({
+  user: one(users, {
+    fields: [scheduledReports.userId],
+    references: [users.id],
+  }),
+  service: one(services, {
+    fields: [scheduledReports.serviceId],
+    references: [services.id],
+  }),
+  history: many(reportHistory),
+}));
+
+export const reportHistoryRelations = relations(reportHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [reportHistory.userId],
+    references: [users.id],
+  }),
+  scheduledReport: one(scheduledReports, {
+    fields: [reportHistory.scheduledReportId],
+    references: [scheduledReports.id],
+  }),
+}));
+
 // ============ TYPE EXPORTS ============
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -232,3 +294,7 @@ export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
 export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
+export type ScheduledReport = typeof scheduledReports.$inferSelect;
+export type NewScheduledReport = typeof scheduledReports.$inferInsert;
+export type ReportHistory = typeof reportHistory.$inferSelect;
+export type NewReportHistory = typeof reportHistory.$inferInsert;
