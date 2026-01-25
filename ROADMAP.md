@@ -203,12 +203,12 @@ DELETE /api/goals/{id}            - Delete goal
 - [x] Trend detection (moving averages, momentum, seasonal patterns)
 - [x] Anomaly detection (statistical deviation analysis with severity levels)
 
-#### 4.3 Projections & Forecasting
-- [ ] Revenue forecasting (time series)
-- [ ] Expense projections
-- [ ] Profit predictions
-- [ ] Scenario planning
-- [ ] Seasonal analysis
+#### 4.3 Projections & Forecasting ✅
+- [x] Revenue forecasting (time series: SMA, Exponential Smoothing, Holt's Linear Trend)
+- [x] Expense projections (category breakdown, historical-based)
+- [x] Profit predictions (combined revenue/expense forecasts with margins)
+- [x] Scenario planning (conservative, baseline, moderate, optimistic, aggressive)
+- [x] Seasonal analysis (monthly patterns, quarterly classification, index calculation)
 
 #### 4.4 Automated Insights
 - [ ] AI-generated insights

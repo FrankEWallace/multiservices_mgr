@@ -724,3 +724,222 @@ export const analyticsApi = {
     }>(`/analytics/anomalies?${params.toString()}`);
   },
 };
+
+// ============ FORECASTING TYPES ============
+export interface ForecastDataPoint {
+  month: string;
+  forecast: number;
+  lowerBound: number;
+  upperBound: number;
+  confidence: number;
+}
+
+export interface HistoricalDataPoint {
+  month: string;
+  actual: number;
+}
+
+export interface SeasonalityData {
+  indices: { month: number; index: number }[];
+  highSeason: number[];
+  lowSeason: number[];
+}
+
+export interface RevenueForecast {
+  method: string;
+  forecastMonths: number;
+  historical: HistoricalDataPoint[];
+  forecasts: ForecastDataPoint[];
+  summary: {
+    avgMonthlyHistorical: number;
+    avgMonthlyForecast: number;
+    totalForecast: number;
+    growthRate: number;
+    trend: "up" | "down" | "stable";
+  };
+  seasonality: SeasonalityData;
+}
+
+export interface ExpenseForecast {
+  method: string;
+  forecastMonths: number;
+  historical: HistoricalDataPoint[];
+  forecasts: ForecastDataPoint[];
+  byCategory: {
+    category: string;
+    avgMonthly: number;
+    projectedTotal: number;
+    share: number;
+  }[];
+  summary: {
+    avgMonthlyHistorical: number;
+    avgMonthlyForecast: number;
+    totalForecast: number;
+    growthRate: number;
+    trend: "up" | "down" | "stable";
+  };
+}
+
+export interface ProfitForecastPoint {
+  month: string;
+  revenue: number;
+  expenses: number;
+  profit: number;
+  profitMargin: number;
+}
+
+export interface ProfitForecast {
+  method: string;
+  forecastMonths: number;
+  historical: { month: string; revenue: number; expenses: number; profit: number }[];
+  forecasts: ProfitForecastPoint[];
+  summary: {
+    avgMonthlyHistoricalProfit: number;
+    avgMonthlyForecastProfit: number;
+    totalForecastRevenue: number;
+    totalForecastExpenses: number;
+    totalForecastProfit: number;
+    avgProfitMargin: number;
+    trend: "up" | "down" | "stable";
+  };
+}
+
+export interface Scenario {
+  name: string;
+  description: string;
+  revenueGrowth: number;
+  expenseGrowth: number;
+  color: string;
+  monthlyAvg: {
+    revenue: number;
+    expenses: number;
+    profit: number;
+    profitMargin: number;
+  };
+  annual: {
+    revenue: number;
+    expenses: number;
+    profit: number;
+  };
+  projections: { month: string; revenue: number; expenses: number; profit: number }[];
+}
+
+export interface ScenarioPlanning {
+  forecastMonths: number;
+  baseline: {
+    avgMonthlyRevenue: number;
+    avgMonthlyExpenses: number;
+    avgMonthlyProfit: number;
+  };
+  scenarios: Scenario[];
+}
+
+export interface SeasonalMonth {
+  month: number;
+  monthName: string;
+  average: number;
+  min: number;
+  max: number;
+  seasonalIndex: number;
+  classification: "peak" | "low" | "normal";
+  dataPoints: number;
+}
+
+export interface SeasonalAnalysis {
+  metric: string;
+  overallAverage: number;
+  monthlyAnalysis: SeasonalMonth[];
+  quarterlyAnalysis: {
+    quarter: string;
+    months: string[];
+    avgSeasonalIndex: number;
+    totalAverage: number;
+    classification: "strong" | "weak" | "normal";
+  }[];
+  patterns: {
+    peakMonths: string[];
+    lowMonths: string[];
+    seasonalStrength: number;
+    recommendation: string;
+  };
+}
+
+export interface ServiceForecast {
+  serviceId: number;
+  serviceName: string;
+  serviceColor: string;
+  historical: {
+    avgMonthlyRevenue: number;
+    avgMonthlyExpenses: number;
+    avgMonthlyProfit: number;
+  };
+  forecast: {
+    avgMonthlyRevenue: number;
+    avgMonthlyExpenses: number;
+    avgMonthlyProfit: number;
+    totalRevenue: number;
+    totalExpenses: number;
+    totalProfit: number;
+  };
+  trend: "up" | "down" | "stable";
+  growthRate: number;
+}
+
+// ============ FORECASTING API ============
+export const forecastingApi = {
+  // Revenue forecasting
+  getRevenueForecast: (months?: number, method?: string, serviceId?: number) => {
+    const params = new URLSearchParams();
+    if (months) params.append("months", months.toString());
+    if (method) params.append("method", method);
+    if (serviceId) params.append("serviceId", serviceId.toString());
+    return apiFetch<RevenueForecast>(`/forecasting/revenue?${params.toString()}`);
+  },
+
+  // Expense projections
+  getExpenseForecast: (months?: number, method?: string) => {
+    const params = new URLSearchParams();
+    if (months) params.append("months", months.toString());
+    if (method) params.append("method", method);
+    return apiFetch<ExpenseForecast>(`/forecasting/expenses?${params.toString()}`);
+  },
+
+  // Profit predictions
+  getProfitForecast: (months?: number, method?: string) => {
+    const params = new URLSearchParams();
+    if (months) params.append("months", months.toString());
+    if (method) params.append("method", method);
+    return apiFetch<ProfitForecast>(`/forecasting/profit?${params.toString()}`);
+  },
+
+  // Scenario planning
+  getScenarios: (months?: number) => {
+    const params = new URLSearchParams();
+    if (months) params.append("months", months.toString());
+    return apiFetch<ScenarioPlanning>(`/forecasting/scenarios?${params.toString()}`);
+  },
+
+  // Seasonal analysis
+  getSeasonalAnalysis: (metric?: string) => {
+    const params = new URLSearchParams();
+    if (metric) params.append("metric", metric);
+    return apiFetch<SeasonalAnalysis>(`/forecasting/seasonal?${params.toString()}`);
+  },
+
+  // Service-level forecasts
+  getServiceForecasts: (months?: number) => {
+    const params = new URLSearchParams();
+    if (months) params.append("months", months.toString());
+    return apiFetch<{
+      forecastMonths: number;
+      services: ServiceForecast[];
+      summary: {
+        totalForecastRevenue: number;
+        totalForecastExpenses: number;
+        totalForecastProfit: number;
+        topGrowing: string[];
+        declining: string[];
+      };
+    }>(`/forecasting/by-service?${params.toString()}`);
+  },
+};
