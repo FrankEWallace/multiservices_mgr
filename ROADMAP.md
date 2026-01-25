@@ -220,13 +220,13 @@ DELETE /api/goals/{id}            - Delete goal
 
 ### 📄 Phase 5: Reporting System (Week 7)
 
-#### 5.1 Report Types
-- [ ] Daily summary report
-- [ ] Weekly performance report
-- [ ] Monthly financial report
-- [ ] Service-wise report
-- [ ] Madeni aging report
-- [ ] Goal achievement report
+#### 5.1 Report Types ✅
+- [x] Daily summary report (revenue, expenses, profit, debt activity)
+- [x] Weekly performance report (daily breakdown, service performance, highlights)
+- [x] Monthly financial report (comprehensive with comparisons, projections)
+- [x] Service-wise report (detailed service metrics with transactions)
+- [x] Debts aging report (aging buckets, top debtors, collection analysis)
+- [x] Goal achievement report (active goals, history, success rates)
 
 #### 5.2 Export Options
 - [ ] PDF generation (ReportLab)

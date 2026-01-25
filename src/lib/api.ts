@@ -1100,3 +1100,478 @@ export const insightsApi = {
   getWeeklySummary: () =>
     apiFetch<WeeklySummary>("/insights/weekly-summary"),
 };
+
+// ============ REPORTS TYPES ============
+export interface ReportType {
+  id: string;
+  name: string;
+  description: string;
+  endpoint: string;
+  parameters: string[];
+  icon: string;
+}
+
+export interface DailyReportSummary {
+  totalRevenue: number;
+  totalRevenueFormatted: string;
+  totalExpenses: number;
+  totalExpensesFormatted: string;
+  netProfit: number;
+  netProfitFormatted: string;
+  profitMargin: string;
+  totalDebtPayments: number;
+  totalDebtPaymentsFormatted: string;
+  totalNewDebts: number;
+  totalNewDebtsFormatted: string;
+}
+
+export interface DailyReport {
+  reportType: string;
+  reportDate: string;
+  generatedAt: string;
+  summary: DailyReportSummary;
+  comparison: {
+    revenueChange: string;
+    expenseChange: string;
+    previousRevenue: number;
+    previousExpenses: number;
+  };
+  breakdown: {
+    revenueByService: {
+      serviceId: number;
+      serviceName: string;
+      total: number;
+      totalFormatted: string;
+      transactionCount: number;
+      percentage: string;
+    }[];
+    expensesByCategory: {
+      category: string;
+      total: number;
+      totalFormatted: string;
+      transactionCount: number;
+      percentage: string;
+    }[];
+    debtPayments: {
+      debtorName: string;
+      amount: number;
+      amountFormatted: string;
+    }[];
+    newDebts: {
+      debtorName: string;
+      amount: number;
+      amountFormatted: string;
+    }[];
+  };
+}
+
+export interface WeeklyReportSummary {
+  totalRevenue: number;
+  totalRevenueFormatted: string;
+  totalExpenses: number;
+  totalExpensesFormatted: string;
+  netProfit: number;
+  netProfitFormatted: string;
+  profitMargin: string;
+  avgDailyRevenue: number;
+  avgDailyRevenueFormatted: string;
+  avgDailyExpenses: number;
+  avgDailyExpensesFormatted: string;
+  debtCollected: number;
+  debtCollectedFormatted: string;
+  paymentsReceived: number;
+}
+
+export interface WeeklyReport {
+  reportType: string;
+  period: { startDate: string; endDate: string };
+  generatedAt: string;
+  summary: WeeklyReportSummary;
+  comparison: {
+    prevWeekRevenue: number;
+    prevWeekExpenses: number;
+    revenueChange: string;
+    expenseChange: string;
+  };
+  highlights: {
+    bestDay: { date: string; revenue: number; revenueFormatted: string } | null;
+    worstDay: { date: string; revenue: number; revenueFormatted: string } | null;
+    topService: { name: string; revenue: number; revenueFormatted: string } | null;
+  };
+  dailyBreakdown: {
+    date: string;
+    dayName: string;
+    revenue: number;
+    revenueFormatted: string;
+    expenses: number;
+    expensesFormatted: string;
+    profit: number;
+    profitFormatted: string;
+  }[];
+  servicePerformance: {
+    serviceId: number;
+    serviceName: string;
+    revenue: number;
+    revenueFormatted: string;
+    expenses: number;
+    expensesFormatted: string;
+    profit: number;
+    profitFormatted: string;
+    profitMargin: string;
+  }[];
+  goalProgress: {
+    id: number;
+    title: string;
+    targetAmount: number;
+    currentAmount: number;
+    progress: string;
+    status: string;
+  }[];
+}
+
+export interface MonthlyReportSummary {
+  totalRevenue: number;
+  totalRevenueFormatted: string;
+  totalExpenses: number;
+  totalExpensesFormatted: string;
+  netProfit: number;
+  netProfitFormatted: string;
+  grossProfitMargin: string;
+  avgDailyRevenue: number;
+  avgDailyRevenueFormatted: string;
+  avgDailyExpenses: number;
+  avgDailyExpensesFormatted: string;
+  projectedMonthlyRevenue: number;
+  projectedMonthlyRevenueFormatted: string;
+}
+
+export interface MonthlyReport {
+  reportType: string;
+  period: {
+    month: number;
+    monthName: string;
+    year: number;
+    startDate: string;
+    endDate: string;
+    daysInMonth: number;
+    daysPassed: number;
+  };
+  generatedAt: string;
+  summary: MonthlyReportSummary;
+  comparison: {
+    prevMonthRevenue: number;
+    prevMonthRevenueFormatted: string;
+    prevMonthExpenses: number;
+    prevMonthExpensesFormatted: string;
+    revenueChange: string;
+    expenseChange: string;
+  };
+  revenueBreakdown: {
+    byService: {
+      serviceId: number;
+      serviceName: string;
+      total: number;
+      totalFormatted: string;
+      percentage: string;
+    }[];
+    byWeek: {
+      week: string;
+      total: number;
+      totalFormatted: string;
+    }[];
+  };
+  expenseBreakdown: {
+    byCategory: {
+      category: string;
+      total: number;
+      totalFormatted: string;
+      count: number;
+      percentage: string;
+    }[];
+    byService: {
+      serviceId: number;
+      serviceName: string;
+      total: number;
+      totalFormatted: string;
+    }[];
+  };
+  debtSummary: {
+    totalOutstanding: number;
+    totalOutstandingFormatted: string;
+    collectedThisMonth: number;
+    collectedThisMonthFormatted: string;
+    newDebtsThisMonth: number;
+    newDebtsThisMonthFormatted: string;
+    netDebtChange: number;
+  };
+  goalProgress: {
+    id: number;
+    title: string;
+    goalType: string;
+    targetAmount: number;
+    targetAmountFormatted: string;
+    currentAmount: number;
+    currentAmountFormatted: string;
+    progress: string;
+    status: string;
+  }[];
+}
+
+export interface ServiceReport {
+  reportType: string;
+  service: {
+    id: number;
+    name: string;
+    description: string;
+    dailyTarget: number;
+    monthlyTarget: number;
+  };
+  period: { startDate: string; endDate: string; periodName: string };
+  generatedAt: string;
+  summary: {
+    totalRevenue: number;
+    totalRevenueFormatted: string;
+    totalExpenses: number;
+    totalExpensesFormatted: string;
+    netProfit: number;
+    netProfitFormatted: string;
+    profitMargin: string;
+    totalDebt: number;
+    totalDebtFormatted: string;
+    transactionCount: number;
+  };
+  revenueBreakdown: {
+    byPaymentMethod: {
+      method: string;
+      total: number;
+      totalFormatted: string;
+      percentage: string;
+    }[];
+    transactions: {
+      date: string;
+      amount: number;
+      amountFormatted: string;
+      description: string;
+      paymentMethod: string;
+    }[];
+  };
+  expenseBreakdown: {
+    byCategory: {
+      category: string;
+      total: number;
+      totalFormatted: string;
+      percentage: string;
+    }[];
+    transactions: {
+      date: string;
+      amount: number;
+      amountFormatted: string;
+      category: string;
+      description: string;
+    }[];
+  };
+  dailyBreakdown: {
+    date: string;
+    revenue: number;
+    revenueFormatted: string;
+    expenses: number;
+    expensesFormatted: string;
+    profit: number;
+    profitFormatted: string;
+  }[];
+  debts: {
+    debtorName: string;
+    originalAmount: number;
+    originalAmountFormatted: string;
+    balance: number;
+    balanceFormatted: string;
+    status: string;
+    dueDate: string;
+  }[];
+  goals: {
+    id: number;
+    title: string;
+    targetAmount: number;
+    currentAmount: number;
+    progress: string;
+    period: string;
+    status: string;
+  }[];
+}
+
+export interface DebtsAgingBucket {
+  count: number;
+  total: number;
+  totalFormatted: string;
+}
+
+export interface DebtItem {
+  id: number;
+  debtorName: string;
+  debtorContact: string;
+  serviceId: number;
+  serviceName: string;
+  originalAmount: number;
+  originalAmountFormatted: string;
+  amountPaid: number;
+  amountPaidFormatted: string;
+  balance: number;
+  balanceFormatted: string;
+  issueDate: string;
+  dueDate: string;
+  daysOverdue: number;
+  status: string;
+}
+
+export interface DebtsAgingReport {
+  reportType: string;
+  reportDate: string;
+  generatedAt: string;
+  summary: {
+    totalOutstanding: number;
+    totalOutstandingFormatted: string;
+    totalOverdue: number;
+    totalOverdueFormatted: string;
+    totalDebtors: number;
+    overduePercentage: string;
+    avgDebtAge: number;
+  };
+  agingBuckets: {
+    current: DebtsAgingBucket;
+    days1to30: DebtsAgingBucket;
+    days31to60: DebtsAgingBucket;
+    days61to90: DebtsAgingBucket;
+    over90: DebtsAgingBucket;
+  };
+  agingDetails: {
+    current: DebtItem[];
+    days1to30: DebtItem[];
+    days31to60: DebtItem[];
+    days61to90: DebtItem[];
+    over90: DebtItem[];
+  };
+  debtByService: {
+    serviceId: number;
+    serviceName: string;
+    totalBalance: number;
+    totalBalanceFormatted: string;
+    count: number;
+    percentage: string;
+  }[];
+  topDebtors: DebtItem[];
+  collectionHistory: {
+    month: string;
+    monthName: string;
+    collected: number;
+    collectedFormatted: string;
+  }[];
+}
+
+export interface GoalReportItem {
+  id: number;
+  title: string;
+  serviceId?: number;
+  serviceName: string;
+  goalType: string;
+  period: string;
+  targetAmount: number;
+  targetAmountFormatted: string;
+  currentAmount: number;
+  currentAmountFormatted: string;
+  progress: string;
+  remaining?: number;
+  remainingFormatted?: string;
+  startDate?: string;
+  endDate?: string;
+  daysRemaining?: number;
+  status: string;
+  isOnTrack?: boolean;
+}
+
+export interface GoalHistoryItem {
+  id: number;
+  title: string;
+  serviceName: string;
+  goalType: string;
+  period: string;
+  targetAmount: number;
+  targetAmountFormatted: string;
+  achievedAmount: number;
+  achievedAmountFormatted: string;
+  achievementRate: string;
+  status: string;
+  completedAt: string;
+}
+
+export interface GoalsReport {
+  reportType: string;
+  generatedAt: string;
+  summary: {
+    totalActiveGoals: number;
+    onTrackGoals: number;
+    atRiskGoals: number;
+    completedAllTime: number;
+    missedAllTime: number;
+    avgAchievementRate: string;
+    successRate: string;
+  };
+  activeGoals: GoalReportItem[];
+  goalsByType: {
+    revenue: { count: number; totalTarget: number; totalCurrent: number };
+    profit: { count: number; totalTarget: number; totalCurrent: number };
+    expense: { count: number; totalTarget: number; totalCurrent: number };
+  };
+  goalsByPeriod: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
+  };
+  achievementHistory: GoalHistoryItem[];
+  achievementByPeriod: {
+    period: string;
+    avgRate: string;
+    count: number;
+  }[];
+}
+
+// ============ REPORTS API ============
+export const reportsApi = {
+  // Get available report types
+  getTypes: () =>
+    apiFetch<{ reportTypes: ReportType[] }>("/reports/types"),
+
+  // Daily Summary Report
+  getDaily: (date?: string) =>
+    apiFetch<DailyReport>(`/reports/daily${date ? `?date=${date}` : ""}`),
+
+  // Weekly Performance Report
+  getWeekly: (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    const query = params.toString();
+    return apiFetch<WeeklyReport>(`/reports/weekly${query ? `?${query}` : ""}`);
+  },
+
+  // Monthly Financial Report
+  getMonthly: (month?: number, year?: number) => {
+    const params = new URLSearchParams();
+    if (month) params.append("month", month.toString());
+    if (year) params.append("year", year.toString());
+    const query = params.toString();
+    return apiFetch<MonthlyReport>(`/reports/monthly${query ? `?${query}` : ""}`);
+  },
+
+  // Service-Wise Report
+  getService: (serviceId: number, period?: string) =>
+    apiFetch<ServiceReport>(`/reports/service/${serviceId}${period ? `?period=${period}` : ""}`),
+
+  // Debts Aging Report
+  getDebtsAging: () =>
+    apiFetch<DebtsAgingReport>("/reports/debts-aging"),
+
+  // Goal Achievement Report
+  getGoals: (period?: string) =>
+    apiFetch<GoalsReport>(`/reports/goals${period ? `?period=${period}` : ""}`),
+};
