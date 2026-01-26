@@ -7,15 +7,11 @@ import {
   Target,
   CreditCard,
   Receipt,
-  TrendingUp,
   FileText,
   Settings,
   ChevronLeft,
   ChevronRight,
   Menu,
-  BarChart3,
-  Lightbulb,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -25,15 +21,13 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Building2, label: "Services", path: "/services" },
-  { icon: DollarSign, label: "Revenue & Costs", path: "/revenue" },
+  { icon: DollarSign, label: "Revenue", path: "/revenue" },
   { icon: Receipt, label: "Expenses", path: "/expenses" },
-  { icon: Target, label: "Goals", path: "/goals" },
   { icon: CreditCard, label: "Debts", path: "/madeni" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
-  { icon: Lightbulb, label: "Insights", path: "/insights" },
-  { icon: TrendingUp, label: "Projections", path: "/projections" },
+  { icon: Target, label: "Goals", path: "/goals" },
   { icon: FileText, label: "Reports", path: "/reports" },
   { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: LayoutDashboard, label: "Analytics", path: "/analytics" },
 ];
 
 function SidebarContent({ collapsed, onCollapse, onNavigate }: { 

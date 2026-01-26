@@ -1,0 +1,1 @@
+"""Meilleur Insights Backend Application"""

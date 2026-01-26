@@ -12,11 +12,8 @@ import Revenue from "./pages/Revenue";
 import Goals from "./pages/Goals";
 import Madeni from "./pages/Madeni";
 import Expenses from "./pages/Expenses";
-import Projections from "./pages/Projections";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
-import Analytics from "./pages/Analytics";
-import Insights from "./pages/Insights";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -82,10 +79,7 @@ const App = () => (
                 <Route path="/debts" element={<ProtectedRoute><Madeni /></ProtectedRoute>} />
                 <Route path="/madeni" element={<ProtectedRoute><Madeni /></ProtectedRoute>} />
                 <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
-                <Route path="/projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-                <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

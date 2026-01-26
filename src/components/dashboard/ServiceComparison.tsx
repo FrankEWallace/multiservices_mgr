@@ -1,36 +1,52 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  PieChart,
+  Pie,
   Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
 } from "recharts";
 import { dashboardApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const COLORS = [
+  "hsl(160, 84%, 39%)", // green
+  "hsl(217, 91%, 60%)", // blue
+  "hsl(38, 92%, 50%)",  // amber
+  "hsl(280, 65%, 60%)", // purple
+  "hsl(0, 84%, 60%)",   // red
+  "hsl(180, 70%, 45%)", // teal
+];
+
+const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
-    const revenue = payload[0]?.value || 0;
-    const target = payload[1]?.value || 0;
-    const percentage = target > 0 ? ((revenue / target) * 100).toFixed(1) : "0";
+    const data = payload[0];
     return (
       <div className="glass-card p-3 border border-border">
-        <p className="text-sm font-medium text-foreground mb-2">{label}</p>
-        <p className="text-sm text-primary">Revenue: ${revenue.toLocaleString()}</p>
-        <p className="text-sm text-muted-foreground">Target: ${target.toLocaleString()}</p>
-        <p className="text-sm mt-1">
-          <span className={revenue >= target ? "text-success" : "text-danger"}>
-            {percentage}% of target
-          </span>
-        </p>
+        <p className="text-sm font-medium text-foreground">{data.name}</p>
+        <p className="text-sm text-primary">${data.value.toLocaleString()}</p>
+        <p className="text-xs text-muted-foreground">{data.payload.percentage}% of total</p>
       </div>
     );
   }
   return null;
+};
+
+const CustomLegend = ({ payload }: any) => {
+  return (
+    <div className="flex flex-wrap justify-center gap-3 mt-2">
+      {payload?.map((entry: any, index: number) => (
+        <div key={`legend-${index}`} className="flex items-center gap-1.5">
+          <div
+            className="w-2.5 h-2.5 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-xs text-muted-foreground">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export function ServiceComparison() {
@@ -40,63 +56,47 @@ export function ServiceComparison() {
     staleTime: 60000,
   });
 
+  const totalRevenue = data?.comparison.reduce((sum, item) => sum + item.actual, 0) || 0;
+
   const chartData = data?.comparison.map((item) => ({
     name: item.name,
-    revenue: item.actual,
-    target: item.target,
+    value: item.actual,
+    percentage: totalRevenue > 0 ? ((item.actual / totalRevenue) * 100).toFixed(1) : "0",
   })) || [];
 
   return (
     <div className="chart-container h-80">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="section-title">Revenue by Service</h3>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-sm text-muted-foreground">Revenue</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-muted" />
-            <span className="text-sm text-muted-foreground">Target</span>
-          </div>
-        </div>
+        <span className="text-sm text-muted-foreground">
+          Total: ${totalRevenue.toLocaleString()}
+        </span>
       </div>
       {isLoading ? (
         <Skeleton className="w-full h-[85%]" />
+      ) : chartData.length === 0 ? (
+        <div className="flex items-center justify-center h-[85%] text-muted-foreground">
+          No revenue data available
+        </div>
       ) : (
         <ResponsiveContainer width="100%" height="85%">
-          <BarChart data={chartData} layout="vertical" barGap={-20}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(222, 47%, 16%)" horizontal={false} />
-            <XAxis
-              type="number"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
-              tickFormatter={(value) => `$${value / 1000}k`}
-            />
-            <YAxis
-              dataKey="name"
-              type="category"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "hsl(215, 20%, 55%)", fontSize: 12 }}
-              width={90}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="target" fill="hsl(222, 47%, 20%)" radius={[0, 4, 4, 0]} barSize={24} />
-            <Bar dataKey="revenue" radius={[0, 4, 4, 0]} barSize={24}>
-              {chartData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={
-                    entry.revenue >= entry.target
-                      ? "hsl(160, 84%, 39%)"
-                      : "hsl(38, 92%, 50%)"
-                  }
-                />
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="45%"
+              innerRadius={0}
+              outerRadius={80}
+              paddingAngle={0}
+              dataKey="value"
+            >
+              {chartData.map((_, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
-            </Bar>
-          </BarChart>
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+            <Legend content={<CustomLegend />} />
+          </PieChart>
         </ResponsiveContainer>
       )}
     </div>
