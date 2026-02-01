@@ -190,12 +190,55 @@ export const reportHistory = sqliteTable("report_history", {
   expiresAt: text("expires_at"), // When the report file will be deleted
 });
 
+// ============ ENTRIES (Unified Income/Expense Tracking) ============
+export const entries = sqliteTable("entries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type").notNull(), // "income" or "expense"
+  amount: real("amount").notNull(),
+  serviceId: integer("service_id").references(() => services.id),
+  category: text("category"), // Optional category for non-service expenses
+  description: text("description"), // Optional notes
+  images: text("images"), // JSON array of image URLs/paths
+  date: text("date").notNull(), // Date of the entry
+  userId: integer("user_id").references(() => users.id),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at"),
+});
+
+// ============ ACTIVITIES (CRUD Tracking per Service) ============
+export const activities = sqliteTable("activities", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  serviceId: integer("service_id").references(() => services.id),
+  userId: integer("user_id").references(() => users.id),
+  action: text("action").notNull(), // create, read, update, delete
+  entityType: text("entity_type").notNull(), // revenue, expense, debt, goal, service
+  entityId: integer("entity_id"),
+  entityName: text("entity_name"), // Human readable name/description
+  details: text("details"), // JSON with old/new values for updates
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: text("created_at").default("CURRENT_TIMESTAMP"),
+});
+
 // ============ RELATIONS ============
 export const servicesRelations = relations(services, ({ many }) => ({
   revenues: many(revenues),
   expenses: many(expenses),
   madenis: many(madenis),
   goals: many(goals),
+  activities: many(activities),
+  entries: many(entries),
+}));
+
+export const entriesRelations = relations(entries, ({ one }) => ({
+  service: one(services, {
+    fields: [entries.serviceId],
+    references: [services.id],
+  }),
+  user: one(users, {
+    fields: [entries.userId],
+    references: [users.id],
+  }),
 }));
 
 export const revenuesRelations = relations(revenues, ({ one }) => ({
@@ -273,6 +316,17 @@ export const reportHistoryRelations = relations(reportHistory, ({ one }) => ({
   }),
 }));
 
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  service: one(services, {
+    fields: [activities.serviceId],
+    references: [services.id],
+  }),
+  user: one(users, {
+    fields: [activities.userId],
+    references: [users.id],
+  }),
+}));
+
 // ============ TYPE EXPORTS ============
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -298,3 +352,7 @@ export type ScheduledReport = typeof scheduledReports.$inferSelect;
 export type NewScheduledReport = typeof scheduledReports.$inferInsert;
 export type ReportHistory = typeof reportHistory.$inferSelect;
 export type NewReportHistory = typeof reportHistory.$inferInsert;
+export type Activity = typeof activities.$inferSelect;
+export type NewActivity = typeof activities.$inferInsert;
+export type Entry = typeof entries.$inferSelect;
+export type NewEntry = typeof entries.$inferInsert;

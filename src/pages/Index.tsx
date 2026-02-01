@@ -6,6 +6,8 @@ import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { ServiceComparison } from "@/components/dashboard/ServiceComparison";
 import { GoalProgress } from "@/components/dashboard/GoalProgress";
 import { RefreshControl } from "@/components/dashboard/RefreshControl";
+import { DateRangePicker, DateRange, getDefaultDateRange } from "@/components/dashboard/DateRangePicker";
+import { DrillDownDialog } from "@/components/dashboard/DrillDownDialog";
 import { dashboardApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -19,9 +21,11 @@ const Index = () => {
   const queryClient = useQueryClient();
   
   // State for dashboard controls
+  const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange());
   const [refreshInterval, setRefreshInterval] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [drillDownType, setDrillDownType] = useState<"revenue" | "profit" | "expenses" | "debt" | "service" | null>(null);
 
   // Queries
   const { data: kpiData, isLoading: kpiLoading, refetch: refetchKPIs } = useQuery({
@@ -70,8 +74,33 @@ const Index = () => {
     }
   };
 
+  // Handle KPI click for drill-down
+  const handleKPIClick = (kpiTitle: string) => {
+    switch (kpiTitle) {
+      case "Total Revenue":
+        setDrillDownType("revenue");
+        break;
+      case "Total Profit":
+        setDrillDownType("profit");
+        break;
+      case "Outstanding Debt":
+        setDrillDownType("debt");
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <DashboardLayout>
+      {/* Drill-down dialog */}
+      <DrillDownDialog
+        open={drillDownType !== null}
+        onOpenChange={(open) => !open && setDrillDownType(null)}
+        type={drillDownType}
+        dateRange={dateRange}
+      />
+
       <div className="space-y-6">
         {/* Dashboard Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -79,13 +108,16 @@ const Index = () => {
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">Business overview at a glance</p>
           </div>
-          <RefreshControl
-            onRefresh={handleRefresh}
-            isRefreshing={isRefreshing}
-            interval={refreshInterval}
-            onIntervalChange={setRefreshInterval}
-            lastUpdated={lastUpdated}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
+            <RefreshControl
+              onRefresh={handleRefresh}
+              isRefreshing={isRefreshing}
+              interval={refreshInterval}
+              onIntervalChange={setRefreshInterval}
+              lastUpdated={lastUpdated}
+            />
+          </div>
         </div>
 
         {/* KPI Cards - 3 cards: Revenue, Profit, Daily Goal */}
@@ -101,7 +133,8 @@ const Index = () => {
               <div
                 key={kpi.title}
                 style={{ animationDelay: `${index * 100}ms` }}
-                className="animate-fade-in"
+                className="animate-fade-in cursor-pointer transition-transform hover:scale-[1.02]"
+                onClick={() => handleKPIClick(kpi.title)}
               >
                 <KPICard
                   title={kpi.title}

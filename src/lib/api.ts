@@ -1791,3 +1791,207 @@ export const scheduledReportsApi = {
       "/scheduled-reports/stats/summary"
     ),
 };
+
+// ============ ACTIVITIES API ============
+export interface Activity {
+  id: number;
+  serviceId: number | null;
+  serviceName: string | null;
+  userId: number | null;
+  userName: string | null;
+  userEmail: string | null;
+  action: "create" | "read" | "update" | "delete";
+  entityType: "revenue" | "expense" | "debt" | "goal" | "service" | "payment";
+  entityId: number | null;
+  entityName: string | null;
+  details: string | null;
+  createdAt: string;
+}
+
+export interface ActivitySummary {
+  byAction: Record<string, number>;
+  byEntityType: Record<string, number>;
+}
+
+export interface ActivityStats {
+  totalActivities: number;
+  byAction: Record<string, number>;
+  byEntityType: Record<string, number>;
+  byService: { serviceId: number; serviceName: string; count: number }[];
+  recentTrend: { date: string; count: number }[];
+}
+
+export const activitiesApi = {
+  // Get all activities with optional filters
+  getAll: (params?: { 
+    serviceId?: number; 
+    action?: string; 
+    entityType?: string; 
+    limit?: number; 
+    offset?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.serviceId) searchParams.append("serviceId", params.serviceId.toString());
+    if (params?.action) searchParams.append("action", params.action);
+    if (params?.entityType) searchParams.append("entityType", params.entityType);
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.offset) searchParams.append("offset", params.offset.toString());
+    const query = searchParams.toString();
+    return apiFetch<{ activities: Activity[]; total: number }>(
+      `/activities${query ? `?${query}` : ""}`
+    );
+  },
+
+  // Get activities for a specific service
+  getByService: (serviceId: number, params?: { limit?: number; offset?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.offset) searchParams.append("offset", params.offset.toString());
+    const query = searchParams.toString();
+    return apiFetch<{ activities: Activity[]; total: number; summary: ActivitySummary }>(
+      `/activities/service/${serviceId}${query ? `?${query}` : ""}`
+    );
+  },
+
+  // Get activity summary/stats
+  getSummary: (days?: number) =>
+    apiFetch<ActivityStats>(`/activities/summary${days ? `?days=${days}` : ""}`),
+
+  // Log an activity (usually called automatically by other CRUD operations)
+  create: (data: {
+    serviceId?: number;
+    action: "create" | "read" | "update" | "delete";
+    entityType: "revenue" | "expense" | "debt" | "goal" | "service" | "payment";
+    entityId?: number;
+    entityName?: string;
+    details?: string;
+  }) =>
+    apiFetch<{ activity: Activity; message: string }>("/activities", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+// ============ ENTRIES API (Unified Income/Expense) ============
+export interface Entry {
+  id: number;
+  type: "income" | "expense";
+  amount: number;
+  serviceId: number | null;
+  serviceName: string | null;
+  category: string | null;
+  description: string | null;
+  images: string[];
+  date: string;
+  userId: number | null;
+  userName: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface EntrySummary {
+  totalIncome: number;
+  totalExpense: number;
+  netProfit: number;
+  incomeCount: number;
+  expenseCount: number;
+  byService: {
+    serviceId: number | null;
+    serviceName: string | null;
+    type: string;
+    total: number;
+    count: number;
+  }[];
+  byCategory: {
+    category: string;
+    total: number;
+    count: number;
+  }[];
+  dailyTrend: {
+    date: string;
+    type: string;
+    total: number;
+  }[];
+}
+
+export const entriesApi = {
+  // Get all entries with filters
+  getAll: (params?: {
+    type?: "income" | "expense";
+    serviceId?: number;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.type) searchParams.append("type", params.type);
+    if (params?.serviceId) searchParams.append("serviceId", params.serviceId.toString());
+    if (params?.startDate) searchParams.append("startDate", params.startDate);
+    if (params?.endDate) searchParams.append("endDate", params.endDate);
+    if (params?.search) searchParams.append("search", params.search);
+    if (params?.limit) searchParams.append("limit", params.limit.toString());
+    if (params?.offset) searchParams.append("offset", params.offset.toString());
+    const query = searchParams.toString();
+    return apiFetch<{ entries: Entry[]; total: number }>(
+      `/entries${query ? `?${query}` : ""}`
+    );
+  },
+
+  // Get summary statistics
+  getSummary: (params?: { startDate?: string; endDate?: string; serviceId?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.append("startDate", params.startDate);
+    if (params?.endDate) searchParams.append("endDate", params.endDate);
+    if (params?.serviceId) searchParams.append("serviceId", params.serviceId.toString());
+    const query = searchParams.toString();
+    return apiFetch<EntrySummary>(`/entries/summary${query ? `?${query}` : ""}`);
+  },
+
+  // Get single entry
+  getById: (id: number) => apiFetch<{ entry: Entry }>(`/entries/${id}`),
+
+  // Create entry
+  create: (data: {
+    type: "income" | "expense";
+    amount: number;
+    serviceId?: number;
+    category?: string;
+    description?: string;
+    images?: string[];
+    date: string;
+  }) =>
+    apiFetch<{ entry: Entry; message: string }>("/entries", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Update entry
+  update: (id: number, data: Partial<{
+    type: "income" | "expense";
+    amount: number;
+    serviceId?: number;
+    category?: string;
+    description?: string;
+    images?: string[];
+    date: string;
+  }>) =>
+    apiFetch<{ entry: Entry; message: string }>(`/entries/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // Delete entry
+  delete: (id: number) =>
+    apiFetch<{ message: string }>(`/entries/${id}`, {
+      method: "DELETE",
+    }),
+
+  // Upload image
+  uploadImage: (image: string) =>
+    apiFetch<{ url: string; message: string }>("/entries/upload-image", {
+      method: "POST",
+      body: JSON.stringify({ image }),
+    }),
+};

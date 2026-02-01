@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db } from "../db";
-import { services, revenues, expenses, madenis, goals } from "../db/schema";
+import { services, revenues, expenses, madenis, goals, entries } from "../db/schema";
 import { sql, eq, gte, lte, and, desc, sum } from "drizzle-orm";
 
 const dashboard = new Hono();
@@ -19,33 +19,65 @@ dashboard.get("/kpis", async (c) => {
     .toISOString()
     .split("T")[0];
 
-  // Current month revenue
+  // Current month revenue (from both revenues and entries tables)
   const currentMonthRevenueResult = await db
     .select({ total: sum(revenues.amount) })
     .from(revenues)
     .where(gte(revenues.date, startOfMonth));
-  const currentMonthRevenue = currentMonthRevenueResult[0];
+  
+  const currentMonthEntriesIncomeResult = await db
+    .select({ total: sum(entries.amount) })
+    .from(entries)
+    .where(and(eq(entries.type, "income"), gte(entries.date, startOfMonth)));
+  
+  const currentMonthRevenue = {
+    total: (Number(currentMonthRevenueResult[0]?.total) || 0) + (Number(currentMonthEntriesIncomeResult[0]?.total) || 0)
+  };
 
-  // Last month revenue
+  // Last month revenue (from both revenues and entries tables)
   const lastMonthRevenueResult = await db
     .select({ total: sum(revenues.amount) })
     .from(revenues)
     .where(and(gte(revenues.date, lastMonthStart), lte(revenues.date, lastMonthEnd)));
-  const lastMonthRevenue = lastMonthRevenueResult[0];
+  
+  const lastMonthEntriesIncomeResult = await db
+    .select({ total: sum(entries.amount) })
+    .from(entries)
+    .where(and(eq(entries.type, "income"), gte(entries.date, lastMonthStart), lte(entries.date, lastMonthEnd)));
+  
+  const lastMonthRevenue = {
+    total: (Number(lastMonthRevenueResult[0]?.total) || 0) + (Number(lastMonthEntriesIncomeResult[0]?.total) || 0)
+  };
 
-  // Current month expenses
+  // Current month expenses (from both expenses and entries tables)
   const currentMonthExpensesResult = await db
     .select({ total: sum(expenses.amount) })
     .from(expenses)
     .where(gte(expenses.date, startOfMonth));
-  const currentMonthExpenses = currentMonthExpensesResult[0];
+  
+  const currentMonthEntriesExpenseResult = await db
+    .select({ total: sum(entries.amount) })
+    .from(entries)
+    .where(and(eq(entries.type, "expense"), gte(entries.date, startOfMonth)));
+  
+  const currentMonthExpenses = {
+    total: (Number(currentMonthExpensesResult[0]?.total) || 0) + (Number(currentMonthEntriesExpenseResult[0]?.total) || 0)
+  };
 
-  // Last month expenses
+  // Last month expenses (from both expenses and entries tables)
   const lastMonthExpensesResult = await db
     .select({ total: sum(expenses.amount) })
     .from(expenses)
     .where(and(gte(expenses.date, lastMonthStart), lte(expenses.date, lastMonthEnd)));
-  const lastMonthExpenses = lastMonthExpensesResult[0];
+  
+  const lastMonthEntriesExpenseResult = await db
+    .select({ total: sum(entries.amount) })
+    .from(entries)
+    .where(and(eq(entries.type, "expense"), gte(entries.date, lastMonthStart), lte(entries.date, lastMonthEnd)));
+  
+  const lastMonthExpenses = {
+    total: (Number(lastMonthExpensesResult[0]?.total) || 0) + (Number(lastMonthEntriesExpenseResult[0]?.total) || 0)
+  };
 
   // Outstanding madeni
   const outstandingMadeniResult = await db
@@ -54,12 +86,20 @@ dashboard.get("/kpis", async (c) => {
     .where(sql`${madenis.status} != 'paid'`);
   const outstandingMadeni = outstandingMadeniResult[0];
 
-  // Today's revenue (cash collected)
+  // Today's revenue (cash collected from both revenues and entries)
   const todayRevenueResult = await db
     .select({ total: sum(revenues.amount) })
     .from(revenues)
     .where(eq(revenues.date, today));
-  const todayRevenue = todayRevenueResult[0];
+  
+  const todayEntriesIncomeResult = await db
+    .select({ total: sum(entries.amount) })
+    .from(entries)
+    .where(and(eq(entries.type, "income"), eq(entries.date, today)));
+  
+  const todayRevenue = {
+    total: (Number(todayRevenueResult[0]?.total) || 0) + (Number(todayEntriesIncomeResult[0]?.total) || 0)
+  };
 
   // Calculate values
   const totalRevenue = Number(currentMonthRevenue?.total) || 0;
@@ -121,6 +161,7 @@ dashboard.get("/kpis", async (c) => {
 dashboard.get("/revenue-chart", async (c) => {
   const { period = "12months" } = c.req.query();
 
+  // Get revenue from revenues table
   const chartData = await db.all(sql`
     SELECT 
       strftime('%Y-%m', ${revenues.date}) as month,
@@ -131,7 +172,19 @@ dashboard.get("/revenue-chart", async (c) => {
     ORDER BY month ASC
   `);
 
-  // Get expenses for the same period
+  // Get income from entries table
+  const entriesIncomeData = await db.all(sql`
+    SELECT 
+      strftime('%Y-%m', ${entries.date}) as month,
+      SUM(${entries.amount}) as revenue
+    FROM ${entries}
+    WHERE ${entries.date} >= date('now', '-12 months')
+      AND ${entries.type} = 'income'
+    GROUP BY strftime('%Y-%m', ${entries.date})
+    ORDER BY month ASC
+  `);
+
+  // Get expenses for the same period (from both tables)
   const expenseData = await db.all(sql`
     SELECT 
       strftime('%Y-%m', ${expenses.date}) as month,
@@ -142,13 +195,48 @@ dashboard.get("/revenue-chart", async (c) => {
     ORDER BY month ASC
   `);
 
-  // Merge data
-  const expenseMap = new Map(expenseData.map((e: any) => [e.month, e.expenses]));
-  const merged = chartData.map((r: any) => ({
-    month: r.month,
-    revenue: Math.round(r.revenue),
-    expenses: Math.round(expenseMap.get(r.month) || 0),
-    profit: Math.round(r.revenue - (expenseMap.get(r.month) || 0)),
+  const entriesExpenseData = await db.all(sql`
+    SELECT 
+      strftime('%Y-%m', ${entries.date}) as month,
+      SUM(${entries.amount}) as expenses
+    FROM ${entries}
+    WHERE ${entries.date} >= date('now', '-12 months')
+      AND ${entries.type} = 'expense'
+    GROUP BY strftime('%Y-%m', ${entries.date})
+    ORDER BY month ASC
+  `);
+
+  // Merge all data sources
+  const revenueMap = new Map<string, number>();
+  const expenseMap = new Map<string, number>();
+
+  // Add revenues from revenues table
+  chartData.forEach((r: any) => {
+    revenueMap.set(r.month, (revenueMap.get(r.month) || 0) + (r.revenue || 0));
+  });
+
+  // Add income from entries table
+  entriesIncomeData.forEach((r: any) => {
+    revenueMap.set(r.month, (revenueMap.get(r.month) || 0) + (r.revenue || 0));
+  });
+
+  // Add expenses from expenses table
+  expenseData.forEach((e: any) => {
+    expenseMap.set(e.month, (expenseMap.get(e.month) || 0) + (e.expenses || 0));
+  });
+
+  // Add expenses from entries table
+  entriesExpenseData.forEach((e: any) => {
+    expenseMap.set(e.month, (expenseMap.get(e.month) || 0) + (e.expenses || 0));
+  });
+
+  // Create merged result
+  const allMonths = new Set([...revenueMap.keys(), ...expenseMap.keys()]);
+  const merged = Array.from(allMonths).sort().map((month) => ({
+    month,
+    revenue: Math.round(revenueMap.get(month) || 0),
+    expenses: Math.round(expenseMap.get(month) || 0),
+    profit: Math.round((revenueMap.get(month) || 0) - (expenseMap.get(month) || 0)),
   }));
 
   return c.json({ chartData: merged });

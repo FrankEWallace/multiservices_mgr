@@ -12,6 +12,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  BarChart3,
+  Lightbulb,
+  TrendingUp,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -20,14 +24,18 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: Activity, label: "Activities", path: "/activities" },
   { icon: Building2, label: "Services", path: "/services" },
-  { icon: DollarSign, label: "Revenue", path: "/revenue" },
-  { icon: Receipt, label: "Expenses", path: "/expenses" },
   { icon: CreditCard, label: "Debts", path: "/madeni" },
   { icon: Target, label: "Goals", path: "/goals" },
   { icon: FileText, label: "Reports", path: "/reports" },
   { icon: Settings, label: "Settings", path: "/settings" },
-  { icon: LayoutDashboard, label: "Analytics", path: "/analytics" },
+];
+
+const advancedItems = [
+  { icon: BarChart3, label: "Analytics", path: "/analytics" },
+  { icon: Lightbulb, label: "Insights", path: "/insights" },
+  { icon: TrendingUp, label: "Projections", path: "/projections" },
 ];
 
 function SidebarContent({ collapsed, onCollapse, onNavigate }: { 
@@ -79,6 +87,33 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
             </NavLink>
           );
         })}
+
+        {/* Advanced Features Section */}
+        <div className="pt-4 mt-4 border-t border-sidebar-border">
+          {!collapsed && (
+            <p className="px-3 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Advanced
+            </p>
+          )}
+          {advancedItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={onNavigate}
+                className={cn(
+                  "nav-item",
+                  isActive && "nav-item-active",
+                  collapsed && "justify-center px-3"
+                )}
+              >
+                <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary")} />
+                {!collapsed && <span>{item.label}</span>}
+              </NavLink>
+            );
+          })}
+        </div>
       </nav>
 
       {/* Collapse Button - only on desktop */}
