@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -933,74 +934,76 @@ export default function Analytics() {
   const [period, setPeriod] = useState("year");
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Advanced Analytics</h1>
-          <p className="text-muted-foreground">
-            Deep insights into profitability, cash flow, trends, and anomalies
-          </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Advanced Analytics</h1>
+            <p className="text-muted-foreground">
+              Deep insights into profitability, cash flow, trends, and anomalies
+            </p>
+          </div>
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PERIOD_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PERIOD_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        {/* Tabs */}
+        <Tabs defaultValue="profit-margins" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="profit-margins" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              <span className="hidden sm:inline">Profit Margins</span>
+            </TabsTrigger>
+            <TabsTrigger value="profitability" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Ranking</span>
+            </TabsTrigger>
+            <TabsTrigger value="cash-flow" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              <span className="hidden sm:inline">Cash Flow</span>
+            </TabsTrigger>
+            <TabsTrigger value="trends" className="flex items-center gap-2">
+              <LineChart className="h-4 w-4" />
+              <span className="hidden sm:inline">Trends</span>
+            </TabsTrigger>
+            <TabsTrigger value="anomalies" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="hidden sm:inline">Anomalies</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profit-margins">
+            <ProfitMarginsTab period={period} />
+          </TabsContent>
+
+          <TabsContent value="profitability">
+            <ProfitabilityRankingTab period={period} />
+          </TabsContent>
+
+          <TabsContent value="cash-flow">
+            <CashFlowTab />
+          </TabsContent>
+
+          <TabsContent value="trends">
+            <TrendsTab period={period} />
+          </TabsContent>
+
+          <TabsContent value="anomalies">
+            <AnomaliesTab />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="profit-margins" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="profit-margins" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            <span className="hidden sm:inline">Profit Margins</span>
-          </TabsTrigger>
-          <TabsTrigger value="profitability" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Ranking</span>
-          </TabsTrigger>
-          <TabsTrigger value="cash-flow" className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            <span className="hidden sm:inline">Cash Flow</span>
-          </TabsTrigger>
-          <TabsTrigger value="trends" className="flex items-center gap-2">
-            <LineChart className="h-4 w-4" />
-            <span className="hidden sm:inline">Trends</span>
-          </TabsTrigger>
-          <TabsTrigger value="anomalies" className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            <span className="hidden sm:inline">Anomalies</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profit-margins">
-          <ProfitMarginsTab period={period} />
-        </TabsContent>
-
-        <TabsContent value="profitability">
-          <ProfitabilityRankingTab period={period} />
-        </TabsContent>
-
-        <TabsContent value="cash-flow">
-          <CashFlowTab />
-        </TabsContent>
-
-        <TabsContent value="trends">
-          <TrendsTab period={period} />
-        </TabsContent>
-
-        <TabsContent value="anomalies">
-          <AnomaliesTab />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </DashboardLayout>
   );
 }
