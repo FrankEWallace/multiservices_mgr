@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { settingsApi, type SettingsGrouped } from "@/lib/api";
 
 interface SettingsContextType {
-  settings: SettingsGrouped | undefined;
+  settings: SettingsGrouped | null;
   isLoading: boolean;
   getSetting: (key: string, defaultValue?: any) => any;
   getCompanyName: () => string;
+  getCompanyLogo: () => string;
   getCurrency: () => { code: string; symbol: string; position: string; decimals: number };
   getTheme: () => string;
   getDateFormat: () => string;
@@ -49,6 +50,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
            "Meilleur Insights";
   };
 
+  const getCompanyLogo = (): string => {
+    return getSetting("company.logo", "");
+  };
+
   const getCurrency = () => {
     return {
       code: getSetting("currency.code", "TSH"),
@@ -77,6 +82,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         isLoading,
         getSetting,
         getCompanyName,
+        getCompanyLogo,
         getCurrency,
         getTheme,
         getDateFormat,

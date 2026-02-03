@@ -49,6 +49,7 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
   
   const companyName = getCompanyName();
   const companyTagline = getSetting("company.tagline", "Business Dashboard");
+  const companyLogo = getSetting("company.logo", "");
   const companyInitials = companyName
     .split(" ")
     .map(word => word[0])
@@ -56,15 +57,36 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
     .join("")
     .toUpperCase() || "M";
 
+  const LogoOrInitials = ({ size = "w-10 h-10" }: { size?: string }) => (
+    <div className={`${size} rounded-xl bg-primary/20 flex items-center justify-center overflow-hidden`}>
+      {companyLogo ? (
+        <img 
+          src={companyLogo as string} 
+          alt={companyName}
+          className="w-full h-full object-contain p-1"
+          onError={(e) => {
+            // Fallback to initials if logo fails to load
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            const parent = target.parentElement;
+            if (parent) {
+              parent.innerHTML = `<span class="text-primary font-bold text-lg">${companyInitials}</span>`;
+            }
+          }}
+        />
+      ) : (
+        <span className="text-primary font-bold text-lg">{companyInitials}</span>
+      )}
+    </div>
+  );
+
   return (
     <>
       {/* Header */}
       <div className="p-4 md:p-6 border-b border-sidebar-border flex items-center justify-between">
         {!collapsed && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-bold text-lg">{companyInitials}</span>
-            </div>
+            <LogoOrInitials />
             <div>
               <h1 className="font-bold text-foreground">{companyName}</h1>
               <p className="text-xs text-muted-foreground">{companyTagline}</p>
@@ -72,8 +94,8 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
           </div>
         )}
         {collapsed && (
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mx-auto">
-            <span className="text-primary font-bold text-lg">{companyInitials}</span>
+          <div className="mx-auto">
+            <LogoOrInitials />
           </div>
         )}
       </div>

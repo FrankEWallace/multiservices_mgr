@@ -221,6 +221,60 @@ const Settings = () => {
                 className="bg-secondary" 
               />
             </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="companyLogo" className="flex items-center gap-2">
+                Company Logo 
+                <span className="text-xs text-muted-foreground">(Shows in sidebar & reports)</span>
+              </Label>
+              <div className="flex items-center gap-4">
+                {getSetting("company.logo") && (
+                  <div className="w-16 h-16 rounded-lg border-2 border-border overflow-hidden bg-secondary flex items-center justify-center">
+                    <img 
+                      src={getSetting("company.logo") as string} 
+                      alt="Company Logo" 
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <Input 
+                    id="companyLogo" 
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Convert to base64
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          handleChange("company.logo", reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="bg-secondary cursor-pointer" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upload your company logo (PNG, JPG, SVG recommended). Leave empty to use company initials.
+                  </p>
+                </div>
+                {getSetting("company.logo") && (
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleChange("company.logo", "")}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
