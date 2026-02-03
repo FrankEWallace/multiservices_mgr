@@ -273,6 +273,15 @@ async function seed() {
   // Create default settings
   const now = new Date().toISOString();
   const defaultSettings = [
+    // Company Branding (NEW - Most Important)
+    { key: "company.name", value: "Meilleur Business Services", category: "company", type: "string", label: "Company Name", description: "Your company name (appears everywhere)", isPublic: true },
+    { key: "company.tagline", value: "Business Dashboard", category: "company", type: "string", label: "Company Tagline", description: "Company tagline or slogan", isPublic: true },
+    { key: "company.email", value: "info@meilleur.com", category: "company", type: "string", label: "Company Email", description: "Official company email address", isPublic: true },
+    { key: "company.phone", value: "+255 123 456 789", category: "company", type: "string", label: "Company Phone", description: "Company phone number", isPublic: true },
+    { key: "company.address", value: "Dar es Salaam, Tanzania", category: "company", type: "string", label: "Company Address", description: "Full company address", isPublic: true },
+    { key: "company.website", value: "https://www.meilleur.com", category: "company", type: "string", label: "Company Website", description: "Company website URL", isPublic: true },
+    { key: "company.taxId", value: "", category: "company", type: "string", label: "Tax ID", description: "Company tax identification number" },
+    
     // General Settings
     { key: "app.name", value: "Meilleur Insights", category: "general", type: "string", label: "Application Name", description: "The name displayed in the application header", isPublic: true },
     { key: "app.tagline", value: "Multi-Service Business Dashboard", category: "general", type: "string", label: "Tagline", description: "Application tagline/subtitle", isPublic: true },
@@ -280,7 +289,7 @@ async function seed() {
     { key: "app.dateFormat", value: "DD/MM/YYYY", category: "general", type: "string", label: "Date Format", description: "Default date format (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD)" },
     
     // Currency Settings
-    { key: "currency.code", value: "TZS", category: "currency", type: "string", label: "Currency Code", description: "ISO 4217 currency code", isPublic: true },
+    { key: "currency.code", value: "TSH", category: "currency", type: "string", label: "Currency Code", description: "ISO 4217 currency code", isPublic: true },
     { key: "currency.symbol", value: "TSh", category: "currency", type: "string", label: "Currency Symbol", description: "Currency symbol to display", isPublic: true },
     { key: "currency.position", value: "before", category: "currency", type: "string", label: "Symbol Position", description: "Position of currency symbol (before/after)" },
     { key: "currency.decimalPlaces", value: "0", category: "currency", type: "number", label: "Decimal Places", description: "Number of decimal places to display" },

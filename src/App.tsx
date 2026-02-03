@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import Index from "./pages/Index";
 import Services from "./pages/Services";
@@ -70,9 +71,10 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <NotificationProvider>
-            <BrowserRouter>
-              <Routes>
+          <SettingsProvider>
+            <NotificationProvider>
+              <BrowserRouter>
+                <Routes>
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
                 <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
@@ -90,9 +92,10 @@ const App = () => (
                 <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </NotificationProvider>
+                </Routes>
+              </BrowserRouter>
+            </NotificationProvider>
+          </SettingsProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

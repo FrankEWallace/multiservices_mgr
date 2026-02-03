@@ -134,6 +134,96 @@ const Settings = () => {
           )}
         </div>
 
+        {/* Company Branding - NEW TOP SECTION */}
+        <div className="glass-card p-6 border-2 border-primary/20">
+          <div className="flex items-center gap-3 mb-6">
+            <Building2 className="w-6 h-6 text-primary" />
+            <div>
+              <h3 className="section-title">Company Branding</h3>
+              <p className="text-sm text-muted-foreground">Configure your company identity across the entire application</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="companyName" className="flex items-center gap-2">
+                Company Name <span className="text-xs text-primary">(Shows everywhere)</span>
+              </Label>
+              <Input 
+                id="companyName" 
+                value={getSetting("company.name") as string} 
+                onChange={(e) => handleChange("company.name", e.target.value)}
+                placeholder="Your Company Name"
+                className="bg-secondary font-medium" 
+              />
+              <p className="text-xs text-muted-foreground">Appears in sidebar, reports, and exports</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="companyTagline">Tagline / Slogan</Label>
+              <Input 
+                id="companyTagline" 
+                value={getSetting("company.tagline") as string} 
+                onChange={(e) => handleChange("company.tagline", e.target.value)}
+                placeholder="Business Dashboard"
+                className="bg-secondary" 
+              />
+              <p className="text-xs text-muted-foreground">Displays below company name</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="companyEmail">Company Email</Label>
+              <Input 
+                id="companyEmail" 
+                type="email"
+                value={getSetting("company.email") as string} 
+                onChange={(e) => handleChange("company.email", e.target.value)}
+                placeholder="info@company.com"
+                className="bg-secondary" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="companyPhone">Company Phone</Label>
+              <Input 
+                id="companyPhone" 
+                value={getSetting("company.phone") as string} 
+                onChange={(e) => handleChange("company.phone", e.target.value)}
+                placeholder="+255..."
+                className="bg-secondary" 
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="companyAddress">Company Address</Label>
+              <Input 
+                id="companyAddress" 
+                value={getSetting("company.address") as string} 
+                onChange={(e) => handleChange("company.address", e.target.value)}
+                placeholder="Full business address"
+                className="bg-secondary" 
+              />
+              <p className="text-xs text-muted-foreground">Used in reports and official documents</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="companyWebsite">Website</Label>
+              <Input 
+                id="companyWebsite" 
+                type="url"
+                value={getSetting("company.website") as string} 
+                onChange={(e) => handleChange("company.website", e.target.value)}
+                placeholder="https://www.company.com"
+                className="bg-secondary" 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="companyTaxId">Tax ID / TIN</Label>
+              <Input 
+                id="companyTaxId" 
+                value={getSetting("company.taxId") as string} 
+                onChange={(e) => handleChange("company.taxId", e.target.value)}
+                placeholder="Tax identification number"
+                className="bg-secondary" 
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Profile Settings */}
         <div className="glass-card p-6">
           <div className="flex items-center gap-3 mb-6">

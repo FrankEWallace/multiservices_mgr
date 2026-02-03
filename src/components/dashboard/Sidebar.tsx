@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -44,6 +45,16 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
   onNavigate?: () => void;
 }) {
   const location = useLocation();
+  const { getCompanyName, getSetting } = useSettings();
+  
+  const companyName = getCompanyName();
+  const companyTagline = getSetting("company.tagline", "Business Dashboard");
+  const companyInitials = companyName
+    .split(" ")
+    .map(word => word[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "M";
 
   return (
     <>
@@ -52,17 +63,17 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
         {!collapsed && (
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-bold text-lg">M</span>
+              <span className="text-primary font-bold text-lg">{companyInitials}</span>
             </div>
             <div>
-              <h1 className="font-bold text-foreground">Meilleur</h1>
-              <p className="text-xs text-muted-foreground">Group Dashboard</p>
+              <h1 className="font-bold text-foreground">{companyName}</h1>
+              <p className="text-xs text-muted-foreground">{companyTagline}</p>
             </div>
           </div>
         )}
         {collapsed && (
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mx-auto">
-            <span className="text-primary font-bold text-lg">M</span>
+            <span className="text-primary font-bold text-lg">{companyInitials}</span>
           </div>
         )}
       </div>
