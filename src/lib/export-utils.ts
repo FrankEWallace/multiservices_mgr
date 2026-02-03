@@ -2055,20 +2055,20 @@ export const exportGoalsReport = {
           <tr>
             <td>Revenue</td>
             <td>${report.goalsByType.revenue.count}</td>
-            <td>KES ${report.goalsByType.revenue.totalTarget.toLocaleString()}</td>
-            <td>KES ${report.goalsByType.revenue.totalCurrent.toLocaleString()}</td>
+            <td>TSH ${report.goalsByType.revenue.totalTarget.toLocaleString()}</td>
+            <td>TSH ${report.goalsByType.revenue.totalCurrent.toLocaleString()}</td>
           </tr>
           <tr>
             <td>Profit</td>
             <td>${report.goalsByType.profit.count}</td>
-            <td>KES ${report.goalsByType.profit.totalTarget.toLocaleString()}</td>
-            <td>KES ${report.goalsByType.profit.totalCurrent.toLocaleString()}</td>
+            <td>TSH ${report.goalsByType.profit.totalTarget.toLocaleString()}</td>
+            <td>TSH ${report.goalsByType.profit.totalCurrent.toLocaleString()}</td>
           </tr>
           <tr>
             <td>Expense</td>
             <td>${report.goalsByType.expense.count}</td>
-            <td>KES ${report.goalsByType.expense.totalTarget.toLocaleString()}</td>
-            <td>KES ${report.goalsByType.expense.totalCurrent.toLocaleString()}</td>
+            <td>TSH ${report.goalsByType.expense.totalTarget.toLocaleString()}</td>
+            <td>TSH ${report.goalsByType.expense.totalCurrent.toLocaleString()}</td>
           </tr>
         </tbody>
       </table>

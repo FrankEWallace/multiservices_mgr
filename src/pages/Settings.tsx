@@ -262,7 +262,7 @@ const Settings = () => {
                   <SelectItem value="TZS">TZS - Tanzanian Shilling</SelectItem>
                   <SelectItem value="USD">USD - US Dollar</SelectItem>
                   <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
+                  <SelectItem value="TSH">TSH - Tanzanian Shilling</SelectItem>
                   <SelectItem value="UGX">UGX - Ugandan Shilling</SelectItem>
                 </SelectContent>
               </Select>

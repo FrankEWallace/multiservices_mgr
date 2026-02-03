@@ -9,7 +9,7 @@ const reports = new Hono();
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "KES",
+    currency: "TSH",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);

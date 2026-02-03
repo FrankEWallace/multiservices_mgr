@@ -870,7 +870,7 @@ const MonthlyReportView = ({ report }: { report: MonthlyReport }) => (
           <div className={cn("text-center p-4 rounded-lg", report.debtSummary.netDebtChange >= 0 ? "bg-green-500/10" : "bg-red-500/10")}>
             <p className="text-sm text-muted-foreground">Net Change</p>
             <p className={cn("text-xl font-bold", report.debtSummary.netDebtChange >= 0 ? "text-green-600" : "text-red-600")}>
-              {report.debtSummary.netDebtChange >= 0 ? "+" : ""}{new Intl.NumberFormat("en-US", { style: "currency", currency: "KES", minimumFractionDigits: 0 }).format(report.debtSummary.netDebtChange)}
+              {report.debtSummary.netDebtChange >= 0 ? "+" : ""}{new Intl.NumberFormat("en-US", { style: "currency", currency: "TSH", minimumFractionDigits: 0 }).format(report.debtSummary.netDebtChange)}
             </p>
           </div>
         </div>
@@ -927,8 +927,8 @@ const ServiceReportView = ({ report }: { report: ServiceReport }) => (
             <h2 className="text-2xl font-bold">{report.service.name}</h2>
             <p className="text-muted-foreground">{report.service.description}</p>
             <div className="flex gap-4 mt-2 text-sm">
-              <span>Daily Target: {new Intl.NumberFormat("en-US", { style: "currency", currency: "KES", minimumFractionDigits: 0 }).format(report.service.dailyTarget)}</span>
-              <span>Monthly Target: {new Intl.NumberFormat("en-US", { style: "currency", currency: "KES", minimumFractionDigits: 0 }).format(report.service.monthlyTarget)}</span>
+              <span>Daily Target: {new Intl.NumberFormat("en-US", { style: "currency", currency: "TSH", minimumFractionDigits: 0 }).format(report.service.dailyTarget)}</span>
+              <span>Monthly Target: {new Intl.NumberFormat("en-US", { style: "currency", currency: "TSH", minimumFractionDigits: 0 }).format(report.service.monthlyTarget)}</span>
             </div>
           </div>
         </div>
@@ -1240,11 +1240,11 @@ const GoalsReportView = ({ report }: { report: GoalsReport }) => (
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Target</span>
-                    <span>{new Intl.NumberFormat("en-US", { style: "currency", currency: "KES", minimumFractionDigits: 0 }).format(data.totalTarget)}</span>
+                    <span>{new Intl.NumberFormat("en-US", { style: "currency", currency: "TSH", minimumFractionDigits: 0 }).format(data.totalTarget)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Current</span>
-                    <span>{new Intl.NumberFormat("en-US", { style: "currency", currency: "KES", minimumFractionDigits: 0 }).format(data.totalCurrent)}</span>
+                    <span>{new Intl.NumberFormat("en-US", { style: "currency", currency: "TSH", minimumFractionDigits: 0 }).format(data.totalCurrent)}</span>
                   </div>
                   <Progress value={data.totalTarget > 0 ? (data.totalCurrent / data.totalTarget) * 100 : 0} className="mt-2" />
                 </div>
