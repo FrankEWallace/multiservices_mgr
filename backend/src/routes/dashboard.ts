@@ -246,15 +246,17 @@ dashboard.get("/revenue-chart", async (c) => {
 dashboard.get("/service-comparison", async (c) => {
   const startOfMonth = new Date().toISOString().slice(0, 7) + "-01";
 
+  // Get revenue from both revenues table and entries table (unified system)
   const comparison = await db.all(sql`
     SELECT 
       s.id,
       s.name,
       s.color,
       s.monthly_target as target,
-      COALESCE(SUM(r.amount), 0) as actual
+      COALESCE(SUM(r.amount), 0) + COALESCE(SUM(e.amount), 0) as actual
     FROM ${services} s
     LEFT JOIN ${revenues} r ON r.service_id = s.id AND r.date >= ${startOfMonth}
+    LEFT JOIN ${entries} e ON e.service_id = s.id AND e.type = 'income' AND e.date >= ${startOfMonth}
     WHERE s.is_active = 1
     GROUP BY s.id
     ORDER BY actual DESC
