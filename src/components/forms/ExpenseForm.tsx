@@ -205,14 +205,14 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
             <div className="space-y-2">
               <Label>Service (Optional)</Label>
               <Select
-                value={formData.serviceId}
-                onValueChange={(value) => setFormData({ ...formData, serviceId: value })}
+                value={formData.serviceId || "general"}
+                onValueChange={(value) => setFormData({ ...formData, serviceId: value === "general" ? "" : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">General Expense</SelectItem>
+                  <SelectItem value="general">General Expense</SelectItem>
                   {services.map((service) => (
                     <SelectItem key={service.id} value={service.id.toString()}>
                       {service.name}

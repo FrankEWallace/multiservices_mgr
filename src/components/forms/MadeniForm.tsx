@@ -197,14 +197,14 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
           <div className="space-y-2">
             <Label htmlFor="serviceId">Related Service</Label>
             <Select
-              value={formData.serviceId}
-              onValueChange={(value) => setFormData({ ...formData, serviceId: value })}
+              value={formData.serviceId || "none"}
+              onValueChange={(value) => setFormData({ ...formData, serviceId: value === "none" ? "" : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a service (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No specific service</SelectItem>
+                <SelectItem value="none">No specific service</SelectItem>
                 {services.map((service) => (
                   <SelectItem key={service.id} value={service.id.toString()}>
                     {service.name}

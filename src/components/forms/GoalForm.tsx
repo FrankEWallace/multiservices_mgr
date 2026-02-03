@@ -244,14 +244,14 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
           <div className="space-y-2">
             <Label htmlFor="serviceId">Related Service</Label>
             <Select
-              value={formData.serviceId}
-              onValueChange={(value) => setFormData({ ...formData, serviceId: value })}
+              value={formData.serviceId || "all"}
+              onValueChange={(value) => setFormData({ ...formData, serviceId: value === "all" ? "" : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All services (company-wide)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Services (Company-wide)</SelectItem>
+                <SelectItem value="all">All Services (Company-wide)</SelectItem>
                 {services.map((service) => (
                   <SelectItem key={service.id} value={service.id.toString()}>
                     {service.name}
