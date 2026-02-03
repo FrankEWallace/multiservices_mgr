@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db } from "../db";
-import { services, revenues, expenses, madenis, madeniPayments } from "../db/schema";
+import { services, revenues, expenses, entries, madenis, madeniPayments } from "../db/schema";
 import { sql, eq, gte, lte, and, desc, sum, avg } from "drizzle-orm";
 
 const analytics = new Hono();
@@ -23,16 +23,19 @@ analytics.get("/profit-margins", async (c) => {
   
   const endDate = now.toISOString().split("T")[0];
   
-  // Get revenue and expenses by service
+  // Get revenue and expenses by service (combining old revenues table + new entries table)
   const revenueByService = await db.all(sql`
     SELECT 
       s.id,
       s.name,
       s.color,
-      COALESCE(SUM(r.amount), 0) as revenue
+      COALESCE(SUM(r.amount), 0) + COALESCE(SUM(e.amount), 0) as revenue
     FROM ${services} s
     LEFT JOIN ${revenues} r ON r.service_id = s.id 
       AND r.date >= ${startDate} AND r.date <= ${endDate}
+    LEFT JOIN ${entries} e ON e.service_id = s.id 
+      AND e.type = 'income'
+      AND e.date >= ${startDate} AND e.date <= ${endDate}
     WHERE s.is_active = 1
     GROUP BY s.id
   `);
@@ -40,10 +43,13 @@ analytics.get("/profit-margins", async (c) => {
   const expensesByService = await db.all(sql`
     SELECT 
       s.id,
-      COALESCE(SUM(e.amount), 0) as expenses
+      COALESCE(SUM(ex.amount), 0) + COALESCE(SUM(en.amount), 0) as expenses
     FROM ${services} s
-    LEFT JOIN ${expenses} e ON e.service_id = s.id 
-      AND e.date >= ${startDate} AND e.date <= ${endDate}
+    LEFT JOIN ${expenses} ex ON ex.service_id = s.id 
+      AND ex.date >= ${startDate} AND ex.date <= ${endDate}
+    LEFT JOIN ${entries} en ON en.service_id = s.id 
+      AND en.type = 'expense'
+      AND en.date >= ${startDate} AND en.date <= ${endDate}
     WHERE s.is_active = 1
     GROUP BY s.id
   `);
@@ -110,26 +116,41 @@ analytics.get("/profitability-ranking", async (c) => {
   
   const endDate = now.toISOString().split("T")[0];
   
-  // Current period data
+  // Current period data (combining old tables + new entries table)
   const currentData = await db.all(sql`
     SELECT 
       s.id,
       s.name,
       s.color,
       s.monthly_target,
-      COALESCE((SELECT SUM(amount) FROM ${revenues} WHERE service_id = s.id AND date >= ${startDate} AND date <= ${endDate}), 0) as revenue,
-      COALESCE((SELECT SUM(amount) FROM ${expenses} WHERE service_id = s.id AND date >= ${startDate} AND date <= ${endDate}), 0) as expenses,
-      COALESCE((SELECT COUNT(*) FROM ${revenues} WHERE service_id = s.id AND date >= ${startDate} AND date <= ${endDate}), 0) as transactions
+      (
+        COALESCE((SELECT SUM(amount) FROM ${revenues} WHERE service_id = s.id AND date >= ${startDate} AND date <= ${endDate}), 0) +
+        COALESCE((SELECT SUM(amount) FROM ${entries} WHERE service_id = s.id AND type = 'income' AND date >= ${startDate} AND date <= ${endDate}), 0)
+      ) as revenue,
+      (
+        COALESCE((SELECT SUM(amount) FROM ${expenses} WHERE service_id = s.id AND date >= ${startDate} AND date <= ${endDate}), 0) +
+        COALESCE((SELECT SUM(amount) FROM ${entries} WHERE service_id = s.id AND type = 'expense' AND date >= ${startDate} AND date <= ${endDate}), 0)
+      ) as expenses,
+      (
+        COALESCE((SELECT COUNT(*) FROM ${revenues} WHERE service_id = s.id AND date >= ${startDate} AND date <= ${endDate}), 0) +
+        COALESCE((SELECT COUNT(*) FROM ${entries} WHERE service_id = s.id AND type = 'income' AND date >= ${startDate} AND date <= ${endDate}), 0)
+      ) as transactions
     FROM ${services} s
     WHERE s.is_active = 1
   `);
   
-  // Previous period data for trend
+  // Previous period data for trend (combining old tables + new entries table)
   const previousData = await db.all(sql`
     SELECT 
       s.id,
-      COALESCE((SELECT SUM(amount) FROM ${revenues} WHERE service_id = s.id AND date >= ${previousStartDate} AND date <= ${previousEndDate}), 0) as revenue,
-      COALESCE((SELECT SUM(amount) FROM ${expenses} WHERE service_id = s.id AND date >= ${previousStartDate} AND date <= ${previousEndDate}), 0) as expenses
+      (
+        COALESCE((SELECT SUM(amount) FROM ${revenues} WHERE service_id = s.id AND date >= ${previousStartDate} AND date <= ${previousEndDate}), 0) +
+        COALESCE((SELECT SUM(amount) FROM ${entries} WHERE service_id = s.id AND type = 'income' AND date >= ${previousStartDate} AND date <= ${previousEndDate}), 0)
+      ) as revenue,
+      (
+        COALESCE((SELECT SUM(amount) FROM ${expenses} WHERE service_id = s.id AND date >= ${previousStartDate} AND date <= ${previousEndDate}), 0) +
+        COALESCE((SELECT SUM(amount) FROM ${entries} WHERE service_id = s.id AND type = 'expense' AND date >= ${previousStartDate} AND date <= ${previousEndDate}), 0)
+      ) as expenses
     FROM ${services} s
     WHERE s.is_active = 1
   `);
@@ -211,26 +232,32 @@ analytics.get("/cash-flow", async (c) => {
   const startStr = startDate.toISOString().split("T")[0];
   const endStr = endDate.toISOString().split("T")[0];
   
-  // Monthly cash inflows (revenues)
+  // Monthly cash inflows (revenues + entries with type='income')
   const inflows = await db.all(sql`
     SELECT 
       strftime('%Y-%m', date) as month,
       SUM(amount) as total,
       COUNT(*) as count
-    FROM ${revenues}
-    WHERE date >= ${startStr} AND date <= ${endStr}
+    FROM (
+      SELECT date, amount FROM ${revenues} WHERE date >= ${startStr} AND date <= ${endStr}
+      UNION ALL
+      SELECT date, amount FROM ${entries} WHERE type = 'income' AND date >= ${startStr} AND date <= ${endStr}
+    )
     GROUP BY strftime('%Y-%m', date)
     ORDER BY month ASC
   `);
   
-  // Monthly cash outflows (expenses)
+  // Monthly cash outflows (expenses + entries with type='expense')
   const outflows = await db.all(sql`
     SELECT 
       strftime('%Y-%m', date) as month,
       SUM(amount) as total,
       COUNT(*) as count
-    FROM ${expenses}
-    WHERE date >= ${startStr} AND date <= ${endStr}
+    FROM (
+      SELECT date, amount FROM ${expenses} WHERE date >= ${startStr} AND date <= ${endStr}
+      UNION ALL
+      SELECT date, amount FROM ${entries} WHERE type = 'expense' AND date >= ${startStr} AND date <= ${endStr}
+    )
     GROUP BY strftime('%Y-%m', date)
     ORDER BY month ASC
   `);
@@ -311,8 +338,11 @@ analytics.get("/trends", async (c) => {
           strftime('%Y-%m', date) as period,
           SUM(amount) as value,
           COUNT(*) as count
-        FROM ${expenses}
-        WHERE date >= ${startStr}
+        FROM (
+          SELECT date, amount FROM ${expenses} WHERE date >= ${startStr}
+          UNION ALL
+          SELECT date, amount FROM ${entries} WHERE type = 'expense' AND date >= ${startStr}
+        )
         GROUP BY strftime('%Y-%m', date)
         ORDER BY period ASC
       `);
@@ -322,8 +352,11 @@ analytics.get("/trends", async (c) => {
           strftime('%Y-W%W', date) as period,
           SUM(amount) as value,
           COUNT(*) as count
-        FROM ${expenses}
-        WHERE date >= ${startStr}
+        FROM (
+          SELECT date, amount FROM ${expenses} WHERE date >= ${startStr}
+          UNION ALL
+          SELECT date, amount FROM ${entries} WHERE type = 'expense' AND date >= ${startStr}
+        )
         GROUP BY strftime('%Y-W%W', date)
         ORDER BY period ASC
       `);
@@ -333,8 +366,11 @@ analytics.get("/trends", async (c) => {
           date as period,
           SUM(amount) as value,
           COUNT(*) as count
-        FROM ${expenses}
-        WHERE date >= ${startStr}
+        FROM (
+          SELECT date, amount FROM ${expenses} WHERE date >= ${startStr}
+          UNION ALL
+          SELECT date, amount FROM ${entries} WHERE type = 'expense' AND date >= ${startStr}
+        )
         GROUP BY date
         ORDER BY period ASC
       `);
@@ -346,8 +382,11 @@ analytics.get("/trends", async (c) => {
           strftime('%Y-%m', date) as period,
           SUM(amount) as value,
           COUNT(*) as count
-        FROM ${revenues}
-        WHERE date >= ${startStr}
+        FROM (
+          SELECT date, amount FROM ${revenues} WHERE date >= ${startStr}
+          UNION ALL
+          SELECT date, amount FROM ${entries} WHERE type = 'income' AND date >= ${startStr}
+        )
         GROUP BY strftime('%Y-%m', date)
         ORDER BY period ASC
       `);
@@ -357,8 +396,11 @@ analytics.get("/trends", async (c) => {
           strftime('%Y-W%W', date) as period,
           SUM(amount) as value,
           COUNT(*) as count
-        FROM ${revenues}
-        WHERE date >= ${startStr}
+        FROM (
+          SELECT date, amount FROM ${revenues} WHERE date >= ${startStr}
+          UNION ALL
+          SELECT date, amount FROM ${entries} WHERE type = 'income' AND date >= ${startStr}
+        )
         GROUP BY strftime('%Y-W%W', date)
         ORDER BY period ASC
       `);
@@ -368,8 +410,11 @@ analytics.get("/trends", async (c) => {
           date as period,
           SUM(amount) as value,
           COUNT(*) as count
-        FROM ${revenues}
-        WHERE date >= ${startStr}
+        FROM (
+          SELECT date, amount FROM ${revenues} WHERE date >= ${startStr}
+          UNION ALL
+          SELECT date, amount FROM ${entries} WHERE type = 'income' AND date >= ${startStr}
+        )
         GROUP BY date
         ORDER BY period ASC
       `);
@@ -498,24 +543,30 @@ analytics.get("/anomalies", async (c) => {
   const startStr = startDate.toISOString().split("T")[0];
   const endStr = endDate.toISOString().split("T")[0];
   
-  // Get daily revenue data
+  // Get daily revenue data (combining old revenues + new entries with type='income')
   const revenueData = await db.all(sql`
     SELECT 
       date,
       SUM(amount) as value
-    FROM ${revenues}
-    WHERE date >= ${startStr}
+    FROM (
+      SELECT date, amount FROM ${revenues} WHERE date >= ${startStr}
+      UNION ALL
+      SELECT date, amount FROM ${entries} WHERE type = 'income' AND date >= ${startStr}
+    )
     GROUP BY date
     ORDER BY date ASC
   `);
   
-  // Get daily expense data
+  // Get daily expense data (combining old expenses + new entries with type='expense')
   const expenseData = await db.all(sql`
     SELECT 
       date,
       SUM(amount) as value
-    FROM ${expenses}
-    WHERE date >= ${startStr}
+    FROM (
+      SELECT date, amount FROM ${expenses} WHERE date >= ${startStr}
+      UNION ALL
+      SELECT date, amount FROM ${entries} WHERE type = 'expense' AND date >= ${startStr}
+    )
     GROUP BY date
     ORDER BY date ASC
   `);
