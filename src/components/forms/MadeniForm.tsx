@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -21,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatDateForInput } from "@/lib/date-utils";
 
 interface MadeniFormProps {
   open: boolean;
@@ -151,8 +153,11 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="debtorName">Debtor Name *</Label>
+          <FormField 
+            label="Debtor Name" 
+            required
+            helper="Full name of the individual or company"
+          >
             <Input
               id="debtorName"
               value={formData.debtorName}
@@ -160,20 +165,19 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
               placeholder="Full name"
               required
             />
-          </div>
+          </FormField>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="debtorContact">Phone</Label>
+            <FormField label="Phone">
               <Input
                 id="debtorContact"
                 value={formData.debtorContact}
                 onChange={(e) => setFormData({ ...formData, debtorContact: e.target.value })}
-                placeholder="+254..."
+                placeholder="+255..."
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="debtorEmail">Email</Label>
+            </FormField>
+
+            <FormField label="Email">
               <Input
                 id="debtorEmail"
                 type="email"
@@ -181,21 +185,22 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
                 onChange={(e) => setFormData({ ...formData, debtorEmail: e.target.value })}
                 placeholder="email@example.com"
               />
-            </div>
+            </FormField>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="debtorAddress">Address</Label>
+          <FormField label="Address">
             <Input
               id="debtorAddress"
               value={formData.debtorAddress}
               onChange={(e) => setFormData({ ...formData, debtorAddress: e.target.value })}
               placeholder="Physical address"
             />
-          </div>
+          </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="serviceId">Related Service</Label>
+          <FormField 
+            label="Related Service"
+            helper="Which service does this debt relate to?"
+          >
             <Select
               value={formData.serviceId || "none"}
               onValueChange={(value) => setFormData({ ...formData, serviceId: value === "none" ? "" : value })}
@@ -212,32 +217,37 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
           <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="originalAmount">Amount ($) *</Label>
+            <FormField 
+              label="Amount (TSh)" 
+              required
+              helper="Total debt amount"
+            >
               <Input
                 id="originalAmount"
                 type="number"
                 step="0.01"
+                min="0"
                 value={formData.originalAmount}
                 onChange={(e) => setFormData({ ...formData, originalAmount: e.target.value })}
                 placeholder="0.00"
                 required
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="issueDate">Issue Date</Label>
+            </FormField>
+
+            <FormField label="Issue Date" required>
               <Input
                 id="issueDate"
                 type="date"
                 value={formData.issueDate}
                 onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
+                required
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dueDate">Due Date *</Label>
+            </FormField>
+
+            <FormField label="Due Date" required>
               <Input
                 id="dueDate"
                 type="date"
@@ -245,7 +255,7 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                 required
               />
-            </div>
+            </FormField>
           </div>
 
           <div className="space-y-2">
