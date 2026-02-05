@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CardSkeleton } from "@/components/ui/loading-skeletons";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   TrendingUp,
@@ -69,11 +69,7 @@ function ProfitMarginsTab({ period }: { period: string }) {
   });
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-[400px] w-full" />
-      </div>
-    );
+    return <CardSkeleton count={2} />;
   }
 
   if (error) {

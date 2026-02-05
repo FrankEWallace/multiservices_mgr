@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/ui/form-field";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { formatDateForInput } from "@/lib/date-utils";
 
 interface ExpenseFormProps {
   open: boolean;
@@ -159,20 +161,28 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount ($) *</Label>
+            <FormField 
+              label="Amount (TSh)" 
+              required
+              helper="Enter the total expense amount"
+            >
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
+                min="0"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="0.00"
                 required
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Date *</Label>
+            </FormField>
+
+            <FormField 
+              label="Date" 
+              required
+              helper="When did this expense occur?"
+            >
               <Input
                 id="date"
                 type="date"
@@ -180,12 +190,11 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 required
               />
-            </div>
+            </FormField>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Category *</Label>
+            <FormField label="Category" required>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
@@ -201,9 +210,12 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Service (Optional)</Label>
+            </FormField>
+
+            <FormField 
+              label="Service" 
+              helper="Link to a specific service or leave as general"
+            >
               <Select
                 value={formData.serviceId || "general"}
                 onValueChange={(value) => setFormData({ ...formData, serviceId: value === "general" ? "" : value })}
@@ -220,21 +232,19 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="vendor">Vendor / Payee</Label>
+          <FormField label="Vendor / Payee">
             <Input
               id="vendor"
               value={formData.vendor}
               onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
               placeholder="e.g., Office Supplies Inc."
             />
-          </div>
+          </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+          <FormField label="Description">
             <Textarea
               id="description"
               value={formData.description}
@@ -242,7 +252,7 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
               placeholder="Brief description of the expense"
               rows={2}
             />
-          </div>
+          </FormField>
 
           <div className="flex items-center space-x-2">
             <Switch
