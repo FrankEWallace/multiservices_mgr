@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { dashboardApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNumberFormat } from "@/hooks/use-number-format";
 
 const COLORS = [
   "hsl(160, 84%, 39%)", // green
@@ -20,12 +21,14 @@ const COLORS = [
 ];
 
 const CustomTooltip = ({ active, payload }: any) => {
+  const { formatCurrency } = useNumberFormat();
+  
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
       <div className="glass-card p-3 border border-border">
         <p className="text-sm font-medium text-foreground">{data.name}</p>
-        <p className="text-sm text-primary">${data.value.toLocaleString()}</p>
+        <p className="text-sm text-primary">{formatCurrency(data.value)}</p>
         <p className="text-xs text-muted-foreground">{data.payload.percentage}% of total</p>
       </div>
     );
@@ -50,6 +53,8 @@ const CustomLegend = ({ payload }: any) => {
 };
 
 export function ServiceComparison() {
+  const { formatCurrency } = useNumberFormat();
+  
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", "service-comparison"],
     queryFn: dashboardApi.getServiceComparison,
@@ -69,7 +74,7 @@ export function ServiceComparison() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="section-title">Revenue by Service</h3>
         <span className="text-sm text-muted-foreground">
-          Total: ${totalRevenue.toLocaleString()}
+          Total: {formatCurrency(totalRevenue)}
         </span>
       </div>
       {isLoading ? (

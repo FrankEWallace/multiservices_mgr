@@ -10,6 +10,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useNumberFormat } from "@/hooks/use-number-format";
 import {
   LineChart,
   Line,
@@ -56,6 +57,8 @@ export function ServiceDetailDialog({
   onOpenChange,
   service,
 }: ServiceDetailDialogProps) {
+  const { formatCurrency, formatNumber } = useNumberFormat();
+  
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ["services", service?.id, "stats"],
     queryFn: () => (service ? servicesApi.getStats(service.id) : null),
@@ -115,7 +118,7 @@ export function ServiceDetailDialog({
                 <span className="text-xs">Revenue</span>
               </div>
               <p className="text-xl font-bold">
-                ${service.revenue.toLocaleString()}
+                {formatCurrency(service.revenue)}
               </p>
             </div>
             <div className="p-4 rounded-lg bg-muted/50">
@@ -124,7 +127,7 @@ export function ServiceDetailDialog({
                 <span className="text-xs">Profit</span>
               </div>
               <p className="text-xl font-bold text-success">
-                ${service.profit.toLocaleString()}
+                {formatCurrency(service.profit)}
               </p>
             </div>
             <div className="p-4 rounded-lg bg-muted/50">
@@ -149,7 +152,7 @@ export function ServiceDetailDialog({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
-                Monthly Target: ${service.monthlyTarget?.toLocaleString() || 0}
+                Monthly Target: {formatCurrency(service.monthlyTarget || 0)}
               </span>
               <Badge variant={service.goalMet ? "default" : "secondary"}>
                 {service.goalMet ? "On Track" : "Below Target"}
@@ -178,10 +181,10 @@ export function ServiceDetailDialog({
                   <YAxis
                     className="text-xs"
                     tick={{ fontSize: 11 }}
-                    tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                    tickFormatter={(value) => formatNumber(value)}
                   />
                   <Tooltip
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+                    formatter={(value: number) => [formatCurrency(value), ""]}
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
@@ -216,19 +219,19 @@ export function ServiceDetailDialog({
               <div className="p-3 rounded-lg border border-border">
                 <p className="text-xs text-muted-foreground">Daily Target</p>
                 <p className="text-lg font-semibold">
-                  ${service.dailyTarget?.toLocaleString() || 0}
+                  {formatCurrency(service.dailyTarget || 0)}
                 </p>
               </div>
               <div className="p-3 rounded-lg border border-border">
                 <p className="text-xs text-muted-foreground">Monthly Target</p>
                 <p className="text-lg font-semibold">
-                  ${service.monthlyTarget?.toLocaleString() || 0}
+                  {formatCurrency(service.monthlyTarget || 0)}
                 </p>
               </div>
               <div className="p-3 rounded-lg border border-border">
                 <p className="text-xs text-muted-foreground">Yearly Target</p>
                 <p className="text-lg font-semibold">
-                  ${service.yearlyTarget?.toLocaleString() || 0}
+                  {formatCurrency(service.yearlyTarget || 0)}
                 </p>
               </div>
             </div>
@@ -247,24 +250,24 @@ export function ServiceDetailDialog({
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground">Monthly Revenue</p>
                   <p className="font-semibold">
-                    ${stats.monthlyRevenue?.toLocaleString() || 0}
+                    {formatCurrency(stats.monthlyRevenue || 0)}
                   </p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground">Monthly Expenses</p>
                   <p className="font-semibold">
-                    ${stats.monthlyExpenses?.toLocaleString() || 0}
+                    {formatCurrency(stats.monthlyExpenses || 0)}
                   </p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground">Monthly Profit</p>
                   <p className="font-semibold text-success">
-                    ${stats.monthlyProfit?.toLocaleString() || 0}
+                    {formatCurrency(stats.monthlyProfit || 0)}
                   </p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground">Yearly Revenue</p>
-                  <p className="font-semibold">${stats.yearlyRevenue?.toLocaleString() || 0}</p>
+                  <p className="font-semibold">{formatCurrency(stats.yearlyRevenue || 0)}</p>
                 </div>
               </div>
             </div>
