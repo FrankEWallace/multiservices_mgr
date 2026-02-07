@@ -10,6 +10,7 @@ import { DateRangePicker, DateRange, getDefaultDateRange } from "@/components/da
 import { DrillDownDialog } from "@/components/dashboard/DrillDownDialog";
 import { dashboardApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNumberFormat } from "@/hooks/use-number-format";
 import {
   DollarSign,
   TrendingUp,
@@ -19,6 +20,7 @@ import {
 
 const Index = () => {
   const queryClient = useQueryClient();
+  const { formatCurrency } = useNumberFormat();
   
   // State for dashboard controls
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange());
@@ -34,10 +36,14 @@ const Index = () => {
     staleTime: 30000,
   });
 
-  // Filter out Debt related KPIs and limit to 3
+  // Filter out Debt related KPIs and limit to 3, then format with user preference
   const filteredKPIs = kpiData?.kpis
     .filter(kpi => !kpi.title.toLowerCase().includes("debt"))
-    .slice(0, 3) || [];
+    .slice(0, 3)
+    .map(kpi => ({
+      ...kpi,
+      formattedValue: formatCurrency(kpi.value),
+    })) || [];
 
   // Refresh all dashboard data
   const handleRefresh = useCallback(async () => {

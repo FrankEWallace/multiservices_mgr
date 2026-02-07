@@ -453,6 +453,34 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* Display Preferences */}
+        <div className="glass-card p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Palette className="w-5 h-5 text-primary" />
+            <h3 className="section-title">Display Preferences</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="numberFormat">Number Format</Label>
+              <Select 
+                value={getSetting("display.numberFormat") as string}
+                onValueChange={(v) => handleChange("display.numberFormat", v)}
+              >
+                <SelectTrigger className="bg-secondary">
+                  <SelectValue placeholder="Select number format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="abbreviated">Abbreviated (1.5K, 2.3M, 1.2B)</SelectItem>
+                  <SelectItem value="full">Full Numbers (1,500, 2,300,000)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Choose how numbers are displayed throughout the application
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Notifications */}
         <div className="glass-card p-6">
           <div className="flex items-center gap-3 mb-6">

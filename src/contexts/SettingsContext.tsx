@@ -12,6 +12,7 @@ interface SettingsContextType {
   getTheme: () => string;
   getDateFormat: () => string;
   getTimezone: () => string;
+  getNumberFormat: () => "abbreviated" | "full";
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -75,6 +76,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     return getSetting("app.timezone", "Africa/Dar_es_Salaam");
   };
 
+  const getNumberFormat = (): "abbreviated" | "full" => {
+    const format = getSetting("display.numberFormat", "abbreviated");
+    return format === "full" ? "full" : "abbreviated";
+  };
+
   return (
     <SettingsContext.Provider
       value={{
@@ -87,6 +93,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         getTheme,
         getDateFormat,
         getTimezone,
+        getNumberFormat,
       }}
     >
       {children}
