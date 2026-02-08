@@ -3,10 +3,14 @@ import { Target, CheckCircle, XCircle } from "lucide-react";
 import { dashboardApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function GoalProgress() {
+interface GoalProgressProps {
+  serviceId?: number;
+}
+
+export function GoalProgress({ serviceId }: GoalProgressProps) {
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", "goal-progress"],
-    queryFn: dashboardApi.getGoalProgress,
+    queryKey: ["dashboard", "goal-progress", serviceId],
+    queryFn: () => dashboardApi.getGoalProgress({ serviceId }),
     staleTime: 60000,
   });
 

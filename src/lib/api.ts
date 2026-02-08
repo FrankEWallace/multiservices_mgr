@@ -138,15 +138,39 @@ export const authApi = {
 
 // Dashboard API
 export const dashboardApi = {
-  getKPIs: () => apiFetch<{ kpis: KPI[] }>("/dashboard/kpis"),
-  getRevenueChart: (period?: string) =>
-    apiFetch<{ chartData: ChartDataPoint[] }>(`/dashboard/revenue-chart${period ? `?period=${period}` : ""}`),
-  getServiceComparison: () =>
-    apiFetch<{ comparison: ServiceComparison[] }>("/dashboard/service-comparison"),
+  getKPIs: (filters?: { serviceId?: number; startDate?: string; endDate?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.serviceId) params.append('serviceId', filters.serviceId.toString());
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+    const queryString = params.toString();
+    return apiFetch<{ kpis: KPI[] }>(`/dashboard/kpis${queryString ? `?${queryString}` : ''}`);
+  },
+  getRevenueChart: (filters?: { period?: string; serviceId?: number; startDate?: string; endDate?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.period) params.append('period', filters.period);
+    if (filters?.serviceId) params.append('serviceId', filters.serviceId.toString());
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+    const queryString = params.toString();
+    return apiFetch<{ chartData: ChartDataPoint[] }>(`/dashboard/revenue-chart${queryString ? `?${queryString}` : ''}`);
+  },
+  getServiceComparison: (filters?: { startDate?: string; endDate?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+    const queryString = params.toString();
+    return apiFetch<{ comparison: ServiceComparison[] }>(`/dashboard/service-comparison${queryString ? `?${queryString}` : ''}`);
+  },
   getInsights: () => apiFetch<{ insights: Insight[] }>("/dashboard/insights"),
   getDebtSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"),
   getMadeniSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"), // Alias
-  getGoalProgress: () => apiFetch<{ goals: GoalProgress[] }>("/dashboard/goal-progress"),
+  getGoalProgress: (filters?: { serviceId?: number }) => {
+    const params = new URLSearchParams();
+    if (filters?.serviceId) params.append('serviceId', filters.serviceId.toString());
+    const queryString = params.toString();
+    return apiFetch<{ goals: GoalProgress[] }>(`/dashboard/goal-progress${queryString ? `?${queryString}` : ''}`);
+  },
   getComparison: (period: "mom" | "yoy" | "wow" = "mom") =>
     apiFetch<{
       period: string;

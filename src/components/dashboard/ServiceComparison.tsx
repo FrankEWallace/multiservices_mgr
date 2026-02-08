@@ -20,6 +20,11 @@ const COLORS = [
   "hsl(180, 70%, 45%)", // teal
 ];
 
+interface ServiceComparisonProps {
+  startDate?: string;
+  endDate?: string;
+}
+
 const CustomTooltip = ({ active, payload }: any) => {
   const { formatCurrency } = useNumberFormat();
   
@@ -52,12 +57,12 @@ const CustomLegend = ({ payload }: any) => {
   );
 };
 
-export function ServiceComparison() {
+export function ServiceComparison({ startDate, endDate }: ServiceComparisonProps) {
   const { formatCurrency } = useNumberFormat();
   
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", "service-comparison"],
-    queryFn: dashboardApi.getServiceComparison,
+    queryKey: ["dashboard", "service-comparison", startDate, endDate],
+    queryFn: () => dashboardApi.getServiceComparison({ startDate, endDate }),
     staleTime: 60000,
   });
 

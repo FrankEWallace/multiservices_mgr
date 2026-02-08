@@ -10,15 +10,24 @@ import {
 } from "recharts";
 import { dashboardApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNumberFormat } from "@/hooks/use-number-format";
+
+interface RevenueChartProps {
+  serviceId?: number;
+  startDate?: string;
+  endDate?: string;
+}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
+  const { formatCurrency } = useNumberFormat();
+  
   if (active && payload && payload.length) {
     return (
       <div className="glass-card p-3 border border-border">
         <p className="text-sm font-medium text-foreground mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: ${entry.value.toLocaleString()}
+            {entry.name}: {formatCurrency(entry.value)}
           </p>
         ))}
       </div>
@@ -27,10 +36,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function RevenueChart() {
+export function RevenueChart({ serviceId, startDate, endDate }: RevenueChartProps) {
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", "revenue-chart"],
-    queryFn: () => dashboardApi.getRevenueChart(),
+    queryKey: ["dashboard", "revenue-chart", serviceId, startDate, endDate],
+    queryFn: () => dashboardApi.getRevenueChart({ serviceId, startDate, endDate }),
     staleTime: 60000, // 1 minute
   });
 

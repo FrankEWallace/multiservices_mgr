@@ -8,9 +8,12 @@ import { GoalProgress } from "@/components/dashboard/GoalProgress";
 import { RefreshControl } from "@/components/dashboard/RefreshControl";
 import { DateRangePicker, DateRange, getDefaultDateRange } from "@/components/dashboard/DateRangePicker";
 import { DrillDownDialog } from "@/components/dashboard/DrillDownDialog";
-import { dashboardApi } from "@/lib/api";
+import { dashboardApi, servicesApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useNumberFormat } from "@/hooks/use-number-format";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Filter } from "lucide-react";
 import {
   DollarSign,
   TrendingUp,
@@ -24,15 +27,27 @@ const Index = () => {
   
   // State for dashboard controls
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange());
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("all");
   const [refreshInterval, setRefreshInterval] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [drillDownType, setDrillDownType] = useState<"revenue" | "profit" | "expenses" | "debt" | "service" | null>(null);
 
-  // Queries
+  // Fetch services list for filter
+  const { data: servicesData } = useQuery({
+    queryKey: ["services"],
+    queryFn: servicesApi.getAll,
+    staleTime: 300000, // 5 minutes
+  });
+
+  // Queries with filter parameters
   const { data: kpiData, isLoading: kpiLoading, refetch: refetchKPIs } = useQuery({
-    queryKey: ["dashboard", "kpis"],
-    queryFn: dashboardApi.getKPIs,
+    queryKey: ["dashboard", "kpis", selectedServiceId, dateRange.from, dateRange.to],
+    queryFn: () => dashboardApi.getKPIs({
+      serviceId: selectedServiceId !== "all" ? Number(selectedServiceId) : undefined,
+      startDate: dateRange.from.toISOString().split('T')[0],
+      endDate: dateRange.to.toISOString().split('T')[0],
+    }),
     staleTime: 30000,
   });
 
@@ -126,6 +141,41 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Filters Row */}
+        <div className="glass-card p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Filters:</span>
+            </div>
+            <div className="flex-1 min-w-[200px] max-w-xs">
+              <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+                <SelectTrigger className="bg-secondary border-border">
+                  <SelectValue placeholder="All Services" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Services</SelectItem>
+                  {servicesData?.services?.map((service) => (
+                    <SelectItem key={service.id} value={service.id.toString()}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedServiceId !== "all" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedServiceId("all")}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Clear Filter
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* KPI Cards - 3 cards: Revenue, Profit, Daily Goal */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {kpiLoading ? (
@@ -156,12 +206,21 @@ const Index = () => {
 
         {/* Charts Row - Revenue Trend + Service Breakdown */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RevenueChart />
-          <ServiceComparison />
+          <RevenueChart 
+            serviceId={selectedServiceId !== "all" ? Number(selectedServiceId) : undefined}
+            startDate={dateRange.from.toISOString().split('T')[0]}
+            endDate={dateRange.to.toISOString().split('T')[0]}
+          />
+          <ServiceComparison 
+            startDate={dateRange.from.toISOString().split('T')[0]}
+            endDate={dateRange.to.toISOString().split('T')[0]}
+          />
         </div>
 
         {/* Goal Progress - Full width */}
-        <GoalProgress />
+        <GoalProgress 
+          serviceId={selectedServiceId !== "all" ? Number(selectedServiceId) : undefined}
+        />
       </div>
     </DashboardLayout>
   );
