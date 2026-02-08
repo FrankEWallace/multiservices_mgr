@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { goalsApi, servicesApi, Goal } from "@/lib/api";
-import { toast } from "sonner";
+import { showError, showSuccess, validateRequired } from "@/lib/error-handler";
 import {
   Dialog,
   DialogContent,
@@ -99,12 +99,15 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Goal created successfully");
+      showSuccess("CREATED", { 
+        resource: "Goal", 
+        name: formData.title 
+      });
       onOpenChange(false);
       resetForm();
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to create goal");
+      showError(error, { resource: "goal", operation: "create" });
     },
   });
 
@@ -114,11 +117,14 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Goal updated successfully");
+      showSuccess("UPDATED", { 
+        resource: "Goal", 
+        name: formData.title 
+      });
       onOpenChange(false);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update goal");
+      showError(error, { resource: "goal", operation: "update" });
     },
   });
 
@@ -140,8 +146,11 @@ export function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.targetAmount) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields with detailed error messages
+    if (!validateRequired(
+      { title: formData.title, targetAmount: formData.targetAmount },
+      { title: "Goal Title", targetAmount: "Target Amount" }
+    )) {
       return;
     }
 

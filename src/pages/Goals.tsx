@@ -7,7 +7,7 @@ import { goalsApi, Goal as GoalType } from "@/lib/api";
 import { GoalForm, GoalHistoryDialog } from "@/components/forms";
 import { DeleteConfirmation } from "@/components/ui/delete-confirmation";
 import { exportToCSV, goalExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
-import { toast } from "sonner";
+import { showError, showSuccess } from "@/lib/error-handler";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,17 +53,22 @@ const Goals = () => {
     setDeleteDialogOpen(true);
   };
 
+  const [completingGoal, setCompletingGoal] = useState<GoalType | null>(null);
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => goalsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Goal deleted successfully");
+      showSuccess("DELETED", { 
+        resource: "Goal", 
+        name: deletingGoal?.title 
+      });
       setDeleteDialogOpen(false);
       setDeletingGoal(null);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to delete goal");
+      showError(error, { resource: "goal", operation: "delete" });
     },
   });
 
@@ -72,16 +77,20 @@ const Goals = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success(data.message, {
-        description: `Achievement rate: ${data.achievementRate.toFixed(1)}%`,
+      showSuccess("GOAL_COMPLETED", {
+        name: completingGoal?.title,
+        achievementRate: data.achievementRate.toFixed(1)
       });
+      setCompletingGoal(null);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to complete goal");
+      showError(error, { resource: "goal", operation: "complete" });
+      setCompletingGoal(null);
     },
   });
 
   const handleComplete = (goal: GoalType) => {
+    setCompletingGoal(goal);
     completeMutation.mutate(goal.id);
   };
 

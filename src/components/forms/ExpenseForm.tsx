@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { expensesApi, servicesApi, Expense } from "@/lib/api";
-import { toast } from "sonner";
+import { showError, showSuccess, validateRequired } from "@/lib/error-handler";
 import {
   Dialog,
   DialogContent,
@@ -85,12 +85,15 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Expense created successfully");
+      showSuccess("CREATED", { 
+        resource: "Expense", 
+        name: `${formData.category} expense of $${formData.amount}` 
+      });
       onOpenChange(false);
       resetForm();
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to create expense");
+      showError(error, { resource: "expense", operation: "create" });
     },
   });
 
@@ -100,11 +103,14 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Expense updated successfully");
+      showSuccess("UPDATED", { 
+        resource: "Expense", 
+        name: `${formData.category} expense` 
+      });
       onOpenChange(false);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Failed to update expense");
+      showError(error, { resource: "expense", operation: "update" });
     },
   });
 
@@ -123,8 +129,11 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.amount || !formData.category) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields with detailed error messages
+    if (!validateRequired(
+      { amount: formData.amount, category: formData.category },
+      { amount: "Amount", category: "Category" }
+    )) {
       return;
     }
 
