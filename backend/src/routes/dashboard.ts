@@ -2,12 +2,20 @@ import { Hono } from "hono";
 import { db } from "../db";
 import { services, revenues, expenses, madenis, goals, entries } from "../db/schema";
 import { sql, eq, gte, lte, and, desc, sum } from "drizzle-orm";
+import { buildRevenueConditions, buildEntriesConditions, buildExpensesConditions } from "../utils/filter-helpers";
 
 const dashboard = new Hono();
 
 // Get KPIs
 dashboard.get("/kpis", async (c) => {
+  // Get filter parameters
+  const serviceId = c.req.query('serviceId');
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+  
   const today = new Date().toISOString().split("T")[0];
+  const currentStartDate = startDate || (today.slice(0, 7) + "-01");
+  const currentEndDate = endDate || today;
   const startOfMonth = today.slice(0, 7) + "-01";
   const startOfYear = today.slice(0, 4) + "-01-01";
 
@@ -19,46 +27,50 @@ dashboard.get("/kpis", async (c) => {
     .toISOString()
     .split("T")[0];
 
-  // Current month revenue (from both revenues and entries tables)
+  // Current period revenue (from both revenues and entries tables)
+  const currentRevFilters = { serviceId, startDate: currentStartDate, endDate: currentEndDate };
+  
   const currentMonthRevenueResult = await db
     .select({ total: sum(revenues.amount) })
     .from(revenues)
-    .where(gte(revenues.date, startOfMonth));
+    .where(buildRevenueConditions(currentRevFilters));
   
   const currentMonthEntriesIncomeResult = await db
     .select({ total: sum(entries.amount) })
     .from(entries)
-    .where(and(eq(entries.type, "income"), gte(entries.date, startOfMonth)));
+    .where(buildEntriesConditions({ ...currentRevFilters, type: 'income' }));
   
   const currentMonthRevenue = {
     total: (Number(currentMonthRevenueResult[0]?.total) || 0) + (Number(currentMonthEntriesIncomeResult[0]?.total) || 0)
   };
 
   // Last month revenue (from both revenues and entries tables)
+  const lastRevFilters = { serviceId, startDate: lastMonthStart, endDate: lastMonthEnd };
+  
   const lastMonthRevenueResult = await db
     .select({ total: sum(revenues.amount) })
     .from(revenues)
-    .where(and(gte(revenues.date, lastMonthStart), lte(revenues.date, lastMonthEnd)));
+    .where(buildRevenueConditions(lastRevFilters));
   
   const lastMonthEntriesIncomeResult = await db
     .select({ total: sum(entries.amount) })
     .from(entries)
-    .where(and(eq(entries.type, "income"), gte(entries.date, lastMonthStart), lte(entries.date, lastMonthEnd)));
+    .where(buildEntriesConditions({ ...lastRevFilters, type: 'income' }));
   
   const lastMonthRevenue = {
     total: (Number(lastMonthRevenueResult[0]?.total) || 0) + (Number(lastMonthEntriesIncomeResult[0]?.total) || 0)
   };
 
-  // Current month expenses (from both expenses and entries tables)
+  // Current period expenses (from both expenses and entries tables)
   const currentMonthExpensesResult = await db
     .select({ total: sum(expenses.amount) })
     .from(expenses)
-    .where(gte(expenses.date, startOfMonth));
+    .where(buildExpensesConditions(currentRevFilters));
   
   const currentMonthEntriesExpenseResult = await db
     .select({ total: sum(entries.amount) })
     .from(entries)
-    .where(and(eq(entries.type, "expense"), gte(entries.date, startOfMonth)));
+    .where(buildEntriesConditions({ ...currentRevFilters, type: 'expense' }));
   
   const currentMonthExpenses = {
     total: (Number(currentMonthExpensesResult[0]?.total) || 0) + (Number(currentMonthEntriesExpenseResult[0]?.total) || 0)
@@ -68,18 +80,18 @@ dashboard.get("/kpis", async (c) => {
   const lastMonthExpensesResult = await db
     .select({ total: sum(expenses.amount) })
     .from(expenses)
-    .where(and(gte(expenses.date, lastMonthStart), lte(expenses.date, lastMonthEnd)));
+    .where(buildExpensesConditions(lastRevFilters));
   
   const lastMonthEntriesExpenseResult = await db
     .select({ total: sum(entries.amount) })
     .from(entries)
-    .where(and(eq(entries.type, "expense"), gte(entries.date, lastMonthStart), lte(entries.date, lastMonthEnd)));
+    .where(buildEntriesConditions({ ...lastRevFilters, type: 'expense' }));
   
   const lastMonthExpenses = {
     total: (Number(lastMonthExpensesResult[0]?.total) || 0) + (Number(lastMonthEntriesExpenseResult[0]?.total) || 0)
   };
 
-  // Outstanding madeni
+  // Outstanding madeni (not affected by service filter)
   const outstandingMadeniResult = await db
     .select({ total: sum(madenis.balance) })
     .from(madenis)
@@ -87,15 +99,17 @@ dashboard.get("/kpis", async (c) => {
   const outstandingMadeni = outstandingMadeniResult[0];
 
   // Today's revenue (cash collected from both revenues and entries)
+  const todayFilters = { serviceId, startDate: today, endDate: today };
+  
   const todayRevenueResult = await db
     .select({ total: sum(revenues.amount) })
     .from(revenues)
-    .where(eq(revenues.date, today));
+    .where(buildRevenueConditions(todayFilters));
   
   const todayEntriesIncomeResult = await db
     .select({ total: sum(entries.amount) })
     .from(entries)
-    .where(and(eq(entries.type, "income"), eq(entries.date, today)));
+    .where(buildEntriesConditions({ ...todayFilters, type: 'income' }));
   
   const todayRevenue = {
     total: (Number(todayRevenueResult[0]?.total) || 0) + (Number(todayEntriesIncomeResult[0]?.total) || 0)
@@ -114,7 +128,8 @@ dashboard.get("/kpis", async (c) => {
   const profitChange = ((totalProfit - lastProfit) / Math.abs(lastProfit || 1)) * 100;
 
   // Daily goal progress
-  const allServices = await db.select().from(services).where(eq(services.isActive, true));
+  const serviceFilter = serviceId ? eq(services.id, Number(serviceId)) : eq(services.isActive, true);
+  const allServices = await db.select().from(services).where(serviceFilter);
   const totalDailyTarget = allServices.reduce((sum, s) => sum + (s.dailyTarget || 0), 0);
   const todayTotal = Number(todayRevenue?.total) || 0;
   const dailyGoalProgress = totalDailyTarget > 0 ? (todayTotal / totalDailyTarget) * 100 : 0;
@@ -160,6 +175,16 @@ dashboard.get("/kpis", async (c) => {
 // Get revenue chart data
 dashboard.get("/revenue-chart", async (c) => {
   const { period = "12months" } = c.req.query();
+  const serviceId = c.req.query('serviceId');
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+
+  // Calculate date range (default to last 12 months)
+  const dateRangeStart = startDate || new Date(new Date().setMonth(new Date().getMonth() - 12)).toISOString().split('T')[0];
+  const dateRangeEnd = endDate || new Date().toISOString().split('T')[0];
+
+  // Build WHERE conditions for SQL queries
+  const serviceFilter = serviceId ? `AND service_id = ${Number(serviceId)}` : '';
 
   // Get revenue from revenues table
   const chartData = await db.all(sql`
@@ -167,7 +192,9 @@ dashboard.get("/revenue-chart", async (c) => {
       strftime('%Y-%m', ${revenues.date}) as month,
       SUM(${revenues.amount}) as revenue
     FROM ${revenues}
-    WHERE ${revenues.date} >= date('now', '-12 months')
+    WHERE ${revenues.date} >= ${dateRangeStart}
+      AND ${revenues.date} <= ${dateRangeEnd}
+      ${sql.raw(serviceFilter)}
     GROUP BY strftime('%Y-%m', ${revenues.date})
     ORDER BY month ASC
   `);
@@ -178,8 +205,10 @@ dashboard.get("/revenue-chart", async (c) => {
       strftime('%Y-%m', ${entries.date}) as month,
       SUM(${entries.amount}) as revenue
     FROM ${entries}
-    WHERE ${entries.date} >= date('now', '-12 months')
+    WHERE ${entries.date} >= ${dateRangeStart}
+      AND ${entries.date} <= ${dateRangeEnd}
       AND ${entries.type} = 'income'
+      ${sql.raw(serviceFilter)}
     GROUP BY strftime('%Y-%m', ${entries.date})
     ORDER BY month ASC
   `);
@@ -190,7 +219,9 @@ dashboard.get("/revenue-chart", async (c) => {
       strftime('%Y-%m', ${expenses.date}) as month,
       SUM(${expenses.amount}) as expenses
     FROM ${expenses}
-    WHERE ${expenses.date} >= date('now', '-12 months')
+    WHERE ${expenses.date} >= ${dateRangeStart}
+      AND ${expenses.date} <= ${dateRangeEnd}
+      ${sql.raw(serviceFilter)}
     GROUP BY strftime('%Y-%m', ${expenses.date})
     ORDER BY month ASC
   `);
@@ -200,8 +231,10 @@ dashboard.get("/revenue-chart", async (c) => {
       strftime('%Y-%m', ${entries.date}) as month,
       SUM(${entries.amount}) as expenses
     FROM ${entries}
-    WHERE ${entries.date} >= date('now', '-12 months')
+    WHERE ${entries.date} >= ${dateRangeStart}
+      AND ${entries.date} <= ${dateRangeEnd}
       AND ${entries.type} = 'expense'
+      ${sql.raw(serviceFilter)}
     GROUP BY strftime('%Y-%m', ${entries.date})
     ORDER BY month ASC
   `);
@@ -244,7 +277,14 @@ dashboard.get("/revenue-chart", async (c) => {
 
 // Get service comparison
 dashboard.get("/service-comparison", async (c) => {
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+  
+  // Default to current month if no date range provided
   const startOfMonth = new Date().toISOString().slice(0, 7) + "-01";
+  const today = new Date().toISOString().split('T')[0];
+  const dateRangeStart = startDate || startOfMonth;
+  const dateRangeEnd = endDate || today;
 
   // Get revenue from both revenues table and entries table (unified system)
   const comparison = await db.all(sql`
@@ -255,8 +295,13 @@ dashboard.get("/service-comparison", async (c) => {
       s.monthly_target as target,
       COALESCE(SUM(r.amount), 0) + COALESCE(SUM(e.amount), 0) as actual
     FROM ${services} s
-    LEFT JOIN ${revenues} r ON r.service_id = s.id AND r.date >= ${startOfMonth}
-    LEFT JOIN ${entries} e ON e.service_id = s.id AND e.type = 'income' AND e.date >= ${startOfMonth}
+    LEFT JOIN ${revenues} r ON r.service_id = s.id 
+      AND r.date >= ${dateRangeStart} 
+      AND r.date <= ${dateRangeEnd}
+    LEFT JOIN ${entries} e ON e.service_id = s.id 
+      AND e.type = 'income' 
+      AND e.date >= ${dateRangeStart}
+      AND e.date <= ${dateRangeEnd}
     WHERE s.is_active = 1
     GROUP BY s.id
     ORDER BY actual DESC
@@ -378,10 +423,17 @@ dashboard.get("/madeni-summary", async (c) => {
 
 // Get goal progress
 dashboard.get("/goal-progress", async (c) => {
+  const serviceId = c.req.query('serviceId');
+  
+  // Build WHERE clause based on filter
+  const whereClause = serviceId 
+    ? and(eq(goals.serviceId, Number(serviceId)), eq(goals.status, "active"))
+    : eq(goals.status, "active");
+  
   const activeGoals = await db
     .select()
     .from(goals)
-    .where(eq(goals.status, "active"))
+    .where(whereClause)
     .orderBy(desc(goals.createdAt));
 
   const goalsWithProgress = activeGoals.map((goal) => ({
