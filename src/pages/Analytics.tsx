@@ -385,7 +385,7 @@ function CashFlowTab() {
   });
 
   if (isLoading) {
-    return <Skeleton className="h-[400px] w-full" />;
+    return <CardSkeleton className="h-[400px] w-full" />;
   }
 
   if (error) {
