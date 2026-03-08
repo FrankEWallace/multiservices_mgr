@@ -20,16 +20,13 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          'ui-sans-serif',
-          'system-ui',
-          '-apple-system',
-          'Segoe UI',
-          'Roboto',
-          'Helvetica Neue',
-          'Arial',
-          'Noto Sans',
-          'Liberation Sans',
-          'sans-serif',
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "SF Pro Display",
+          "SF Pro Text",
+          "Segoe UI",
+          "Helvetica Neue",
+          "sans-serif",
         ],
       },
       colors: {
