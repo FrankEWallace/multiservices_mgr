@@ -586,7 +586,7 @@ function TrendsTab({ period }: { period: string }) {
   });
 
   if (isLoading) {
-    return <CardSkeleton className="h-[400px] w-full" />;
+    return <Skeleton className="h-[400px] w-full" />;
   }
 
   if (error) {
