@@ -135,9 +135,11 @@
 
 @layer utilities {
   .glass-card {
-    /* Minimal surface: no blur, no heavy glow */
-    @apply bg-card border border-border rounded-lg;
-    box-shadow: none;
+    @apply bg-card/60 backdrop-blur-xl border border-border/50 rounded-xl;
+    box-shadow: 
+      10px 10px 20px hsl(var(--foreground) / 0.05),
+      -10px -10px 20px hsl(var(--background) / 0.8),
+      inset 1px 1px 1px hsl(var(--background) / 0.5);
   }
 
   .glass-card-hover {
