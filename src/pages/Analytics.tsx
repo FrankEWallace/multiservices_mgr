@@ -70,7 +70,7 @@ function ProfitMarginsTab({ period }: { period: string }) {
   });
 
   if (isLoading) {
-    return <CardSkeleton count={2} />;
+    return <PageSkeleton type="dashboard" />;
   }
 
   if (error) {
