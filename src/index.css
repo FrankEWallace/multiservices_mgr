@@ -143,13 +143,18 @@
   }
 
   .glass-card-hover {
-    @apply glass-card transition-all duration-300;
+    @apply glass-card transition-all duration-300 cursor-pointer;
   }
 
   .glass-card-hover:hover {
-    background-color: hsl(var(--card-hover));
-    @apply border-border;
-    box-shadow: none;
+    transform: translateY(-4px) scale(1.01);
+    background-color: hsl(var(--card-hover) / 0.8);
+    @apply border-primary/30;
+    box-shadow: 
+      15px 15px 30px hsl(var(--foreground) / 0.08),
+      -15px -15px 30px hsl(var(--background) / 0.9),
+      inset 1px 1px 2px hsl(var(--background) / 0.6),
+      0 0 15px hsl(var(--primary) / 0.1);
   }
 
   .kpi-card {
