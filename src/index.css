@@ -268,7 +268,7 @@
       ),
       radial-gradient(
         240px circle at var(--px) var(--py),
-        rgba(255, 255, 255, 0.18),
+        hsl(0 0% 100% / 0.18),
         transparent 65%
       );
     mix-blend-mode: overlay;
