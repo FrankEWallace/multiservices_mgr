@@ -243,6 +243,82 @@
     transition: transform 0.1s ease, box-shadow 0.1s ease;
   }
 
+  /* KPI Cards — interactive spotlight + tilt */
+  .kpi-card.kpi-interactive {
+    --px: 50%;
+    --py: 35%;
+    --rx: 0deg;
+    --ry: 0deg;
+    transform-style: preserve-3d;
+  }
+
+  .kpi-card.kpi-interactive::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    background:
+      radial-gradient(
+        520px circle at var(--px) var(--py),
+        hsl(var(--primary) / 0.2),
+        transparent 60%
+      ),
+      radial-gradient(
+        240px circle at var(--px) var(--py),
+        rgba(255, 255, 255, 0.18),
+        transparent 65%
+      );
+    mix-blend-mode: overlay;
+  }
+
+  .kpi-card.kpi-interactive:hover::after {
+    opacity: 1;
+  }
+
+  .kpi-card.kpi-interactive:hover {
+    transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-2px)
+      scale(1.01);
+  }
+
+  .kpi-card.kpi-interactive:active {
+    transform: perspective(900px) rotateX(0deg) rotateY(0deg) scale(0.97);
+  }
+
+  .kpi-value {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--foreground)),
+      hsl(var(--foreground) / 0.72)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .kpi-card:hover .kpi-value {
+    background: linear-gradient(180deg, hsl(var(--foreground)), hsl(var(--primary) / 0.78));
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-card,
+    .kpi-card:hover,
+    .kpi-card:active {
+      transition: none;
+      transform: none;
+    }
+
+    .kpi-card.kpi-interactive::after {
+      transition: none;
+    }
+  }
+
+  /* Typography — Apple-style precision */
+
   /* Typography — Apple-style precision */
   .stat-value {
     @apply font-bold text-foreground;
