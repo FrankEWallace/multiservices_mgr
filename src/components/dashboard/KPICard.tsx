@@ -29,7 +29,6 @@ export function KPICard({
   onClick,
 }: KPICardProps) {
   const isPositive = change !== undefined && change > 0;
-  const isNeutral = change !== undefined && change === 0;
   const isNegative = change !== undefined && change < 0;
 
   const trendColor = isPositive
