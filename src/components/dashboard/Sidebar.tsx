@@ -195,7 +195,7 @@ export function Sidebar() {
             <Menu className="w-5 h-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-72 bg-sidebar">
+        <SheetContent side="left" className="p-0 w-72 bg-sidebar/80 backdrop-blur-xl border-r border-white/10">
           <div className="h-full flex flex-col">
             <SidebarContent 
               collapsed={false} 
