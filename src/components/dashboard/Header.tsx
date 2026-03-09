@@ -112,22 +112,48 @@ export function Header() {
   );
 
   return (
-    <header className="h-14 md:h-16 bg-card/50 backdrop-blur-xl border-b border-border px-3 md:px-6 flex items-center justify-between sticky top-0 z-40">
-      {/* Left side */}
-      <div className="flex items-center gap-2 md:gap-6">
-        {/* Spacer for mobile menu button */}
-        {isMobile && <div className="w-10" />}
-        
-        <h2 className="text-base md:text-xl font-semibold text-foreground truncate">
-          {isMobile ? "Dashboard" : "Executive Dashboard"}
-        </h2>
-        
-        {/* Desktop filters */}
+    <header
+      className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6"
+      style={{
+        height: isMobile ? "56px" : "64px",
+        background: "hsl(var(--card) / 0.8)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        borderBottom: "1px solid hsl(var(--border))",
+      }}
+    >
+      {/* Left — title + desktop filters */}
+      <div className="flex items-center gap-4">
+        {/* Mobile spacer for sidebar sheet trigger */}
+        {isMobile && <div className="w-8" />}
+
+        <div>
+          <h2
+            className="text-foreground leading-none"
+            style={{
+              fontSize: isMobile ? "1rem" : "1.125rem",
+              fontWeight: 600,
+              letterSpacing: "-0.025em",
+            }}
+          >
+            {isMobile ? "Dashboard" : "Executive Dashboard"}
+          </h2>
+          {!isMobile && (
+            <p className="text-muted-foreground mt-0.5" style={{ fontSize: "0.72rem", letterSpacing: "0.04em", fontWeight: 500 }}>
+              {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </p>
+          )}
+        </div>
+
+        {/* Desktop filters — pill style */}
         {!isMobile && (
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 ml-2">
             <Select value={selectedService} onValueChange={setSelectedService}>
-              <SelectTrigger className="w-44 bg-secondary border-border">
-                <SelectValue placeholder="Select Service" />
+              <SelectTrigger
+                className="h-8 text-xs font-medium border-border bg-secondary/70 rounded-full px-4 gap-1.5 focus:ring-0"
+                style={{ minWidth: "140px" }}
+              >
+                <SelectValue placeholder="All Services" />
               </SelectTrigger>
               <SelectContent>
                 {services.map((service) => (
@@ -139,9 +165,12 @@ export function Header() {
             </Select>
 
             <Select value={selectedRange} onValueChange={setSelectedRange}>
-              <SelectTrigger className="w-36 bg-secondary border-border">
-                <Calendar className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Date Range" />
+              <SelectTrigger
+                className="h-8 text-xs font-medium border-border bg-secondary/70 rounded-full px-4 gap-1.5 focus:ring-0"
+                style={{ minWidth: "120px" }}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <SelectValue placeholder="This Month" />
               </SelectTrigger>
               <SelectContent>
                 {dateRanges.map((range) => (
@@ -155,21 +184,27 @@ export function Header() {
         )}
       </div>
 
-      {/* Right side */}
-      <div className="flex items-center gap-2 md:gap-4">
-        {/* Mobile filters button */}
+      {/* Right — actions */}
+      <div className="flex items-center gap-1 md:gap-2">
+        {/* Mobile filters sheet */}
         {isMobile && (
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Filter className="w-5 h-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground"
+              >
+                <Filter className="w-4 h-4" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-auto">
-              <SheetHeader>
-                <SheetTitle>Filters</SheetTitle>
+            <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
+              <SheetHeader className="mb-4">
+                <SheetTitle className="text-base font-semibold" style={{ letterSpacing: "-0.02em" }}>
+                  Filters
+                </SheetTitle>
               </SheetHeader>
-              <div className="py-4">
+              <div className="pb-6">
                 <FiltersContent />
               </div>
             </SheetContent>
@@ -178,73 +213,91 @@ export function Header() {
 
         {/* Desktop search */}
         {!isMobile && (
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative hidden md:flex items-center">
+            <Search className="absolute left-3 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Search..."
-              className="w-48 lg:w-64 pl-10 bg-secondary border-border"
+              className="h-8 w-48 lg:w-56 pl-9 pr-3 text-xs rounded-full bg-secondary/70 border-border focus-visible:ring-1"
             />
           </div>
         )}
-        
+
         {/* Theme toggle */}
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="rounded-lg"
+          className="w-9 h-9 rounded-xl text-muted-foreground hover:text-foreground"
           aria-label="Toggle theme"
           onClick={() => setTheme(isDark ? "light" : "dark")}
         >
-          {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          {isDark
+            ? <Sun className="w-4 h-4" />
+            : <Moon className="w-4 h-4" />
+          }
         </Button>
-        
+
         {/* Notifications */}
         <NotificationCenter />
 
-        {/* User menu */}
+        {/* Avatar / User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 md:gap-3 md:pl-4 md:border-l border-border hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-primary font-semibold text-xs md:text-sm">
-                  {initials}
-                </span>
+            <button
+              className="flex items-center gap-2.5 ml-1 pl-3 border-l border-border/60 focus:outline-none"
+              style={{ touchAction: "manipulation" }}
+            >
+              <div
+                className="flex items-center justify-center rounded-full bg-primary/15 text-primary font-semibold select-none"
+                style={{
+                  width: isMobile ? "32px" : "34px",
+                  height: isMobile ? "32px" : "34px",
+                  fontSize: "0.75rem",
+                  letterSpacing: "-0.01em",
+                  boxShadow: "0 0 0 2px hsl(var(--primary)/0.2)",
+                }}
+              >
+                {initials}
               </div>
-              {/* Hide user info on mobile */}
               {!isMobile && (
-                <div className="text-sm text-left hidden sm:block">
-                  <p className="font-medium text-foreground">
-                    {user?.fullName || user?.username}
+                <div className="hidden sm:block text-left">
+                  <p
+                    className="text-foreground"
+                    style={{ fontSize: "0.8rem", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.2 }}
+                  >
+                    {user?.fullName?.split(" ")[0] || user?.username}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {user?.isAdmin ? "Admin" : "User"}
+                  <p
+                    className="text-muted-foreground"
+                    style={{ fontSize: "0.68rem", letterSpacing: "0.01em", lineHeight: 1.2 }}
+                  >
+                    {user?.isAdmin ? "Administrator" : "Member"}
                   </p>
                 </div>
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>
-              <div>
-                <p>{user?.fullName || user?.username}</p>
-                <p className="text-xs text-muted-foreground font-normal">{user?.email}</p>
-              </div>
+          <DropdownMenuContent align="end" className="w-52 rounded-xl p-1.5">
+            <DropdownMenuLabel className="px-2 py-2">
+              <p className="font-semibold text-foreground" style={{ fontSize: "0.85rem", letterSpacing: "-0.02em" }}>
+                {user?.fullName || user?.username}
+              </p>
+              <p className="text-xs text-muted-foreground font-normal mt-0.5">{user?.email}</p>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuSeparator className="my-1" />
+            <DropdownMenuItem className="cursor-pointer rounded-lg text-sm">
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer rounded-lg text-sm">
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="my-1" />
             <DropdownMenuItem
-              className="cursor-pointer text-danger focus:text-danger"
+              className="cursor-pointer rounded-lg text-sm text-destructive focus:text-destructive focus:bg-destructive/10"
               onClick={logout}
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              <LogOut className="w-3.5 h-3.5 mr-2" />
+              Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

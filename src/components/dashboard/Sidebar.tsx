@@ -83,13 +83,13 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
   return (
     <>
       {/* Header */}
-      <div className="p-4 md:p-6 border-b border-sidebar-border flex items-center justify-between">
+      <div className="px-4 py-5 border-b border-sidebar-border flex items-center justify-between">
         {!collapsed && (
           <div className="flex items-center gap-3">
             <LogoOrInitials />
             <div>
-              <h1 className="font-bold text-foreground">{companyName}</h1>
-              <p className="text-xs text-muted-foreground">{companyTagline}</p>
+              <h1 className="font-semibold text-foreground text-sm leading-tight" style={{ letterSpacing: '-0.02em' }}>{companyName}</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">{companyTagline}</p>
             </div>
           </div>
         )}
@@ -101,7 +101,7 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 md:p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -115,16 +115,16 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
                 collapsed && "justify-center px-3"
               )}
             >
-              <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary")} />
+              <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0")} strokeWidth={isActive ? 2.2 : 1.8} />
               {!collapsed && <span>{item.label}</span>}
             </NavLink>
           );
         })}
 
         {/* Advanced Features Section */}
-        <div className="pt-4 mt-4 border-t border-sidebar-border">
+        <div className="pt-5 mt-3 border-t border-sidebar-border">
           {!collapsed && (
-            <p className="px-3 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <p className="px-3 mb-2 text-[10px] font-semibold text-muted-foreground uppercase" style={{ letterSpacing: '0.08em' }}>
               Advanced
             </p>
           )}
@@ -141,7 +141,7 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
                   collapsed && "justify-center px-3"
                 )}
               >
-                <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary")} />
+                <item.icon className={cn("w-[18px] h-[18px] flex-shrink-0")} strokeWidth={isActive ? 2.2 : 1.8} />
                 {!collapsed && <span>{item.label}</span>}
               </NavLink>
             );
@@ -151,16 +151,16 @@ function SidebarContent({ collapsed, onCollapse, onNavigate }: {
 
       {/* Collapse Button - only on desktop */}
       {onCollapse && (
-        <div className="p-4 border-t border-sidebar-border hidden md:block">
+        <div className="p-3 border-t border-sidebar-border hidden md:block">
           <button
             onClick={onCollapse}
-            className="nav-item w-full justify-center"
+            className="nav-item w-full justify-center text-xs"
           >
             {collapsed ? (
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4" />
             ) : (
               <>
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
                 <span>Collapse</span>
               </>
             )}

@@ -32,12 +32,31 @@ app.use("*", logger());
 // CORS configuration - MUST be before other middleware to handle preflight
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:8080", "http://localhost:5173", "http://localhost:8082"];
+  : [
+      "http://localhost:8080", 
+      "http://localhost:5173", 
+      "http://localhost:8082",
+      "http://192.168.100.111:5173", // Your Mac's IP for simulator
+      "capacitor://localhost", // Capacitor iOS
+      "ionic://localhost", // Ionic iOS
+      "http://localhost", // iOS Simulator
+    ];
 
 app.use(
   "*",
   cors({
-    origin: allowedOrigins,
+    origin: (origin) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return origin;
+      // Allow all localhost and local network origins for development
+      if (origin.includes('localhost') || origin.includes('192.168.') || origin.includes('capacitor://') || origin.includes('ionic://')) {
+        return origin;
+      }
+      if (allowedOrigins.includes(origin)) {
+        return origin;
+      }
+      return allowedOrigins[0]; // fallback
+    },
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
@@ -95,12 +114,15 @@ app.onError((err, c) => {
 });
 
 const port = Number(process.env.PORT) || 3000;
+const host = process.env.HOST || "0.0.0.0"; // Listen on all network interfaces
 
 console.log(`🚀 Server running at http://localhost:${port}`);
+console.log(`📱 Accessible from network at http://192.168.100.111:${port}`);
 
 serve({
   fetch: app.fetch,
   port,
+  hostname: host,
 });
 
 export default app;

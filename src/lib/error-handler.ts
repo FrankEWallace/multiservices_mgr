@@ -1,7 +1,6 @@
 /**
  * Enhanced Error Handling Utility
- * Provides user-friendly error messages with actionable descriptions
- * Implements Shneiderman's Rule 3: Offer Informative Feedback
+ * User-friendly error and success messages for better feedback.
  */
 
 import { toast } from "@/hooks/use-toast";

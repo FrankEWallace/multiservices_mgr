@@ -1,19 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { ServiceComparison } from "@/components/dashboard/ServiceComparison";
 import { GoalProgress } from "@/components/dashboard/GoalProgress";
-import { RefreshControl } from "@/components/dashboard/RefreshControl";
 import { DateRangePicker, DateRange, getDefaultDateRange } from "@/components/dashboard/DateRangePicker";
 import { DrillDownDialog } from "@/components/dashboard/DrillDownDialog";
 import { dashboardApi, servicesApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { useNumberFormat } from "@/hooks/use-number-format";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   DollarSign,
   TrendingUp,
@@ -28,8 +27,6 @@ const Index = () => {
   // State for dashboard controls
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange());
   const [selectedServiceId, setSelectedServiceId] = useState<string>("all");
-  const [refreshInterval, setRefreshInterval] = useState(0);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [drillDownType, setDrillDownType] = useState<"revenue" | "profit" | "expenses" | "debt" | "service" | null>(null);
 
@@ -68,22 +65,10 @@ const Index = () => {
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
         refetchKPIs(),
       ]);
-      setLastUpdated(new Date());
     } finally {
       setIsRefreshing(false);
     }
   }, [queryClient, refetchKPIs]);
-
-  // Auto-refresh effect
-  useEffect(() => {
-    if (refreshInterval === 0) return;
-    
-    const interval = setInterval(() => {
-      handleRefresh();
-    }, refreshInterval * 1000);
-    
-    return () => clearInterval(interval);
-  }, [refreshInterval, handleRefresh]);
 
   // Icon mapping
   const getIcon = (iconName: string) => {
@@ -122,74 +107,76 @@ const Index = () => {
         dateRange={dateRange}
       />
 
-      <div className="space-y-6">
-        {/* Dashboard Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="space-y-5">
+
+        {/* ── Page header ─────────────────────────────────────────── */}
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Business overview at a glance</p>
+            <h1
+              className="text-foreground font-bold leading-tight"
+              style={{ fontSize: "1.6rem", letterSpacing: "-0.03em" }}
+            >
+              Overview
+            </h1>
+            <p
+              className="text-muted-foreground mt-0.5"
+              style={{ fontSize: "0.8rem", letterSpacing: "0.01em" }}
+            >
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long", month: "long", day: "numeric",
+              })}
+            </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+
+          {/* Controls — compact pill row */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <DateRangePicker value={dateRange} onChange={setDateRange} />
-            <RefreshControl
-              onRefresh={handleRefresh}
-              isRefreshing={isRefreshing}
-              interval={refreshInterval}
-              onIntervalChange={setRefreshInterval}
-              lastUpdated={lastUpdated}
-            />
-          </div>
-        </div>
 
-        {/* Filters Row */}
-        <div className="glass-card p-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Filters:</span>
-            </div>
-            <div className="flex-1 min-w-[200px] max-w-xs">
-              <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="All Services" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Services</SelectItem>
-                  {servicesData?.services?.map((service) => (
-                    <SelectItem key={service.id} value={service.id.toString()}>
-                      {service.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedServiceId !== "all" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedServiceId("all")}
-                className="text-muted-foreground hover:text-foreground"
+            {/* Service filter pill */}
+            <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+              <SelectTrigger
+                className="h-8 rounded-full text-xs font-medium border-border bg-secondary/70 px-3 gap-1 focus:ring-0"
+                style={{ minWidth: 110 }}
               >
-                Clear Filter
-              </Button>
-            )}
+                <SelectValue placeholder="All Services" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Services</SelectItem>
+                {servicesData?.services?.map((service) => (
+                  <SelectItem key={service.id} value={service.id.toString()}>
+                    {service.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Refresh icon button */}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-secondary/70 border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-all active:scale-90 touch-manipulation disabled:opacity-40"
+              style={{ flexShrink: 0 }}
+              aria-label="Refresh"
+            >
+              <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} />
+            </button>
           </div>
         </div>
 
-        {/* KPI Cards - 3 cards: Revenue, Profit, Daily Goal */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* ── KPI strip — 3 cards in one row ──────────────────────── */}
+        <div className="grid grid-cols-3 gap-3">
           {kpiLoading ? (
             <>
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-28 rounded-lg" />
+                <Skeleton key={i} className="h-24 rounded-2xl" />
               ))}
             </>
           ) : (
             filteredKPIs.map((kpi, index) => (
               <div
                 key={kpi.title}
-                style={{ animationDelay: `${index * 100}ms` }}
-                className="animate-fade-in cursor-pointer transition-transform hover:scale-[1.02]"
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 80}ms` }}
                 onClick={() => handleKPIClick(kpi.title)}
               >
                 <KPICard
@@ -198,27 +185,28 @@ const Index = () => {
                   change={kpi.change}
                   icon={getIcon(kpi.icon)}
                   variant={kpi.variant}
+                  compact
                 />
               </div>
             ))
           )}
         </div>
 
-        {/* Charts Row - Revenue Trend + Service Breakdown */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RevenueChart 
+        {/* ── Charts ──────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <RevenueChart
             serviceId={selectedServiceId !== "all" ? Number(selectedServiceId) : undefined}
-            startDate={dateRange.from.toISOString().split('T')[0]}
-            endDate={dateRange.to.toISOString().split('T')[0]}
+            startDate={dateRange.from.toISOString().split("T")[0]}
+            endDate={dateRange.to.toISOString().split("T")[0]}
           />
-          <ServiceComparison 
-            startDate={dateRange.from.toISOString().split('T')[0]}
-            endDate={dateRange.to.toISOString().split('T')[0]}
+          <ServiceComparison
+            startDate={dateRange.from.toISOString().split("T")[0]}
+            endDate={dateRange.to.toISOString().split("T")[0]}
           />
         </div>
 
-        {/* Goal Progress - Full width */}
-        <GoalProgress 
+        {/* ── Goals ───────────────────────────────────────────────── */}
+        <GoalProgress
           serviceId={selectedServiceId !== "all" ? Number(selectedServiceId) : undefined}
         />
       </div>

@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
+import { BottomNav } from "@/components/BottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardLayoutProps {
@@ -14,8 +15,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar />
       <div className={`min-h-screen transition-all duration-300 ${isMobile ? 'ml-0' : 'md:ml-64'}`}>
         <Header />
-        <main className="p-3 sm:p-4 md:p-6">{children}</main>
+        <main className={`p-3 sm:p-4 md:p-6 ${isMobile ? 'mobile-page-content' : ''}`}>
+          {children}
+        </main>
       </div>
+      {isMobile && <BottomNav />}
     </div>
   );
 }

@@ -73,14 +73,14 @@ export function DateRangePicker({ value, onChange, className }: DateRangePickerP
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal gap-2",
+            "h-8 rounded-full text-xs font-medium border-border bg-secondary/70 px-3 gap-1.5 focus:ring-0 justify-start",
             !value && "text-muted-foreground",
             className
           )}
         >
-          <CalendarIcon className="h-4 w-4" />
+          <CalendarIcon className="h-3.5 w-3.5 flex-shrink-0" />
           <span>{value.label}</span>
-          <ChevronDown className="h-4 w-4 ml-auto opacity-50" />
+          <ChevronDown className="h-3 w-3 ml-0.5 opacity-50 flex-shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="end">
