@@ -195,7 +195,7 @@ export function Sidebar() {
             <Menu className="w-5 h-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-72 bg-sidebar">
+        <SheetContent side="left" className="p-0 w-72 bg-sidebar/80 backdrop-blur-xl border-r border-white/10">
           <div className="h-full flex flex-col">
             <SidebarContent 
               collapsed={false} 
@@ -207,11 +207,11 @@ export function Sidebar() {
     );
   }
 
-  // Desktop sidebar
+  // Desktop sidebar with glassmorphism
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border transition-all duration-300 z-50 flex flex-col hidden md:flex",
+        "fixed left-0 top-0 h-full bg-sidebar/70 backdrop-blur-xl border-r border-white/10 transition-all duration-300 z-50 flex flex-col hidden md:flex shadow-[4px_0_24px_rgba(0,0,0,0.1),inset_-1px_0_0_rgba(255,255,255,0.05)]",
         collapsed ? "w-20" : "w-64"
       )}
     >
