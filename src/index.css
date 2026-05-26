@@ -421,19 +421,25 @@
 
   /* ── Bottom Tab Bar (mobile) ── */
   .bottom-nav {
-    @apply fixed bottom-0 left-0 right-0 flex items-center justify-around;
-    background: hsl(var(--background) / 0.85);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    backdrop-filter: blur(24px) saturate(180%);
-    border-top: 1px solid hsl(var(--border) / 0.6);
+    @apply fixed bottom-0 left-0 right-0 flex items-end justify-around;
+    background: hsl(var(--background) / 0.88);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    backdrop-filter: blur(28px) saturate(200%);
+    border-top: 1px solid hsl(var(--border) / 0.5);
     padding-bottom: env(safe-area-inset-bottom);
     padding-top: 0.5rem;
     z-index: 50;
-    height: calc(58px + env(safe-area-inset-bottom));
+    /* Slightly taller to give room for the raised Entry button */
+    height: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  .dark .bottom-nav {
+    background: hsl(var(--background) / 0.92);
+    border-top-color: hsl(var(--border) / 0.3);
   }
 
   .bottom-nav-item {
-    @apply flex flex-col items-center justify-center gap-0.5 flex-1 rounded-xl;
+    @apply flex flex-col items-center justify-end gap-0.5 flex-1 rounded-xl pb-2;
     min-height: 44px;
     min-width: 44px;
     color: hsl(var(--muted-foreground));
@@ -444,11 +450,11 @@
     touch-action: manipulation;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    padding: 0.3rem 0.5rem;
+    padding: 0.3rem 0.5rem 0.5rem;
   }
 
   .bottom-nav-item:active {
-    transform: scale(0.8);
+    transform: scale(0.82);
     transition: transform 0.08s ease;
   }
 
@@ -456,10 +462,11 @@
     color: hsl(var(--primary));
   }
 
+  /* Pill indicator behind icon when active */
   .bottom-nav-item.active .bottom-nav-indicator {
-    background: hsl(var(--primary) / 0.12);
+    background: hsl(var(--primary) / 0.1);
     border-radius: 10px;
-    padding: 0.25rem 0.875rem;
+    padding: 0.2rem 0.75rem;
   }
 
   .bottom-nav-item span {
@@ -471,7 +478,7 @@
 
   /* iOS safe-area spacing for page content */
   .mobile-page-content {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   /* ── Badges ── */

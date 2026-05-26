@@ -8,6 +8,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import Index from "./pages/Index";
+import Entry from "./pages/Entry";
 import Services from "./pages/Services";
 import Revenue from "./pages/Revenue";
 import Goals from "./pages/Goals";
@@ -86,6 +87,7 @@ const App = () => (
                 <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
                 <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
                 <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                <Route path="/entry" element={<ProtectedRoute><Entry /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
                 <Route path="/revenue" element={<ProtectedRoute><Revenue /></ProtectedRoute>} />
                 <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />

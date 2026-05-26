@@ -16,6 +16,7 @@ import {
   Lightbulb,
   TrendingUp,
   Activity,
+  PlusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,13 +25,16 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
+  { icon: PlusCircle,    label: "Entry",     path: "/entry" },
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Activity, label: "Activities", path: "/activities" },
-  { icon: Building2, label: "Services", path: "/services" },
-  { icon: CreditCard, label: "Debts", path: "/debts" },
-  { icon: Target, label: "Goals", path: "/goals" },
-  { icon: FileText, label: "Reports", path: "/reports" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: Building2,    label: "Services",  path: "/services" },
+  { icon: DollarSign,   label: "Revenue",   path: "/revenue" },
+  { icon: CreditCard,   label: "Debts",     path: "/debts" },
+  { icon: Receipt,      label: "Expenses",  path: "/expenses" },
+  { icon: Target,       label: "Goals",     path: "/goals" },
+  { icon: Activity,     label: "Activities", path: "/activities" },
+  { icon: FileText,     label: "Reports",   path: "/reports" },
+  { icon: Settings,     label: "Settings",  path: "/settings" },
 ];
 
 const advancedItems = [
