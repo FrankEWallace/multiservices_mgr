@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueries } from "@tanstack/react-query";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,13 +18,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  FileText, 
-  Download, 
-  Calendar as CalendarIcon, 
-  BarChart2, 
-  PieChart, 
-  TrendingUp, 
+import {
+  FileText,
+  Download,
+  Calendar as CalendarIcon,
+  BarChart2,
+  PieChart,
+  TrendingUp,
   Clock,
   Target,
   ArrowUpRight,
@@ -38,7 +38,10 @@ import {
   RefreshCw,
   FileSpreadsheet,
   FileDown,
-  ChevronDown
+  ChevronDown,
+  ChevronRight,
+  Layers,
+  Zap,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -59,7 +62,7 @@ import {
 import { ScheduledReports } from "@/components/reports/ScheduledReports";
 
 const Reports = () => {
-  const [activeTab, setActiveTab] = useState("daily");
+  const [activeTab, setActiveTab] = useState("feed");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -150,13 +153,14 @@ const Reports = () => {
   };
 
   const reportTabs = [
-    { id: "daily", label: "Daily", icon: CalendarIcon },
-    { id: "weekly", label: "Weekly", icon: BarChart2 },
-    { id: "monthly", label: "Monthly", icon: FileText },
-    { id: "service", label: "Service", icon: PieChart },
-    { id: "debts", label: "Debts Aging", icon: Clock },
-    { id: "goals", label: "Goals", icon: Target },
-    { id: "scheduled", label: "Scheduled", icon: Clock },
+    { id: "feed",      label: "Summary",  icon: Zap },
+    { id: "daily",     label: "Daily",    icon: CalendarIcon },
+    { id: "weekly",    label: "Weekly",   icon: BarChart2 },
+    { id: "monthly",   label: "Monthly",  icon: FileText },
+    { id: "service",   label: "Service",  icon: PieChart },
+    { id: "debts",     label: "Debts",    icon: Clock },
+    { id: "goals",     label: "Goals",    icon: Target },
+    { id: "scheduled", label: "Scheduled",icon: Layers },
   ];
 
   return (
@@ -216,7 +220,7 @@ const Reports = () => {
 
         {/* Report Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-7 w-full print:hidden">
+          <TabsList className="grid grid-cols-8 w-full print:hidden">
             {reportTabs.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
                 <tab.icon className="w-4 h-4" />
@@ -224,6 +228,11 @@ const Reports = () => {
               </TabsTrigger>
             ))}
           </TabsList>
+
+          {/* ── Summary Feed Tab ── */}
+          <TabsContent value="feed">
+            <SummaryFeedTab onNavigate={setActiveTab} />
+          </TabsContent>
 
           {/* Daily Report Tab */}
           <TabsContent value="daily" className="space-y-4">
@@ -455,6 +464,267 @@ const Reports = () => {
     </DashboardLayout>
   );
 };
+
+// ============ SUMMARY FEED ============
+function SummaryFeedTab({ onNavigate }: { onNavigate: (tab: string) => void }) {
+  const today = format(new Date(), "yyyy-MM-dd");
+  const [expanded, setExpanded] = useState<string | null>("today");
+
+  const results = useQueries({
+    queries: [
+      { queryKey: ["report-daily", today],   queryFn: () => reportsApi.getDaily(today),    staleTime: 60_000 },
+      { queryKey: ["report-weekly"],          queryFn: () => reportsApi.getWeekly(),         staleTime: 60_000 },
+      { queryKey: ["report-monthly", new Date().getMonth() + 1, new Date().getFullYear()],
+        queryFn: () => reportsApi.getMonthly(new Date().getMonth() + 1, new Date().getFullYear()), staleTime: 60_000 },
+    ],
+  });
+
+  const [dailyResult, weeklyResult, monthlyResult] = results;
+
+  const cards: {
+    id: string;
+    label: string;
+    sublabel: string;
+    tab: string;
+    isLoading: boolean;
+    net?: number;
+    netFormatted?: string;
+    revenue?: string;
+    expenses?: string;
+    margin?: string;
+    topService?: string;
+    topCategory?: string;
+    highlights?: string[];
+  }[] = [
+    {
+      id: "today",
+      label: "Today",
+      sublabel: format(new Date(), "EEEE, MMM d"),
+      tab: "daily",
+      isLoading: dailyResult.isLoading,
+      net: dailyResult.data?.summary.netProfit,
+      netFormatted: dailyResult.data?.summary.netProfitFormatted,
+      revenue: dailyResult.data?.summary.totalRevenueFormatted,
+      expenses: dailyResult.data?.summary.totalExpensesFormatted,
+      margin: dailyResult.data?.summary.profitMargin,
+      topService: dailyResult.data?.breakdown.revenueByService[0]?.serviceName,
+      topCategory: dailyResult.data?.breakdown.expensesByCategory[0]?.category,
+      highlights: [],
+    },
+    {
+      id: "week",
+      label: "This Week",
+      sublabel: weeklyResult.data
+        ? `${weeklyResult.data.period.startDate} – ${weeklyResult.data.period.endDate}`
+        : "Current week",
+      tab: "weekly",
+      isLoading: weeklyResult.isLoading,
+      net: weeklyResult.data?.summary.netProfit,
+      netFormatted: weeklyResult.data?.summary.netProfitFormatted,
+      revenue: weeklyResult.data?.summary.totalRevenueFormatted,
+      expenses: weeklyResult.data?.summary.totalExpensesFormatted,
+      margin: weeklyResult.data?.summary.profitMargin,
+      topService: weeklyResult.data?.highlights.topService?.name,
+      topCategory: undefined,
+      highlights: [
+        weeklyResult.data?.highlights.bestDay
+          ? `Best day: ${new Date(weeklyResult.data.highlights.bestDay.date).toLocaleDateString("en-US", { weekday: "long" })} (${weeklyResult.data.highlights.bestDay.revenueFormatted})`
+          : "",
+      ].filter(Boolean),
+    },
+    {
+      id: "month",
+      label: "This Month",
+      sublabel: monthlyResult.data
+        ? `${monthlyResult.data.period.monthName} ${monthlyResult.data.period.year} · Day ${monthlyResult.data.period.daysPassed}/${monthlyResult.data.period.daysInMonth}`
+        : format(new Date(), "MMMM yyyy"),
+      tab: "monthly",
+      isLoading: monthlyResult.isLoading,
+      net: monthlyResult.data?.summary.netProfit,
+      netFormatted: monthlyResult.data?.summary.netProfitFormatted,
+      revenue: monthlyResult.data?.summary.totalRevenueFormatted,
+      expenses: monthlyResult.data?.summary.totalExpensesFormatted,
+      margin: monthlyResult.data?.summary.grossProfitMargin,
+      topService: monthlyResult.data?.revenueBreakdown.byService[0]?.serviceName,
+      topCategory: monthlyResult.data?.expenseBreakdown.byCategory[0]?.category,
+      highlights: [
+        monthlyResult.data
+          ? `Projected: ${monthlyResult.data.summary.projectedMonthlyRevenueFormatted}`
+          : "",
+        monthlyResult.data?.goalProgress.length
+          ? `${monthlyResult.data.goalProgress.filter(g => parseFloat(g.progress) >= 100).length}/${monthlyResult.data.goalProgress.length} goals met`
+          : "",
+      ].filter(Boolean),
+    },
+  ];
+
+  return (
+    <div className="space-y-3 animate-fade-up">
+      {/* Header */}
+      <div className="flex items-center gap-2 pb-1">
+        <Zap className="w-4 h-4 text-primary" />
+        <h2 className="font-semibold text-foreground" style={{ letterSpacing: "-0.02em" }}>
+          Smart Summary
+        </h2>
+        <span className="text-xs text-muted-foreground ml-1">Auto-generated · updates live</span>
+      </div>
+
+      {cards.map((card, i) => {
+        const isOpen   = expanded === card.id;
+        const netPos   = (card.net ?? 0) >= 0;
+        const netColor = netPos ? "hsl(142 65% 36%)" : "hsl(4 86% 58%)";
+
+        return (
+          <div
+            key={card.id}
+            className="glass-card overflow-hidden animate-fade-up"
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
+            {/* ── Card header — always visible, tap to toggle ── */}
+            <button
+              onClick={() => setExpanded(isOpen ? null : card.id)}
+              className="w-full flex items-center gap-4 p-5 text-left hover:bg-muted/30 transition-colors active:bg-muted/50"
+            >
+              {/* Period badge */}
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span
+                    className="text-xs font-bold uppercase px-2 py-0.5 rounded-full"
+                    style={{
+                      background: `${netColor}18`,
+                      color: netColor,
+                      letterSpacing: "0.07em",
+                    }}
+                  >
+                    {card.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground truncate">{card.sublabel}</span>
+                </div>
+
+                {card.isLoading ? (
+                  <div className="flex items-center gap-3 mt-1">
+                    <Skeleton className="h-8 w-28 rounded-lg" />
+                    <Skeleton className="h-5 w-16 rounded-lg" />
+                  </div>
+                ) : (
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    {/* Net number */}
+                    <span
+                      className="font-bold tabular-nums leading-none"
+                      style={{
+                        fontSize: "clamp(1.5rem, 5vw, 2rem)",
+                        letterSpacing: "-0.04em",
+                        color: netColor,
+                      }}
+                    >
+                      {card.netFormatted ?? "—"}
+                    </span>
+                    {/* Margin pill */}
+                    {card.margin && (
+                      <span
+                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ background: `${netColor}15`, color: netColor }}
+                      >
+                        {card.margin}% margin
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Rev / Exp chips */}
+                {!card.isLoading && (
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <ArrowUpRight className="w-3 h-3" style={{ color: "hsl(142 65% 36%)" }} />
+                      <span className="text-xs font-medium tabular-nums text-foreground">{card.revenue ?? "—"}</span>
+                      <span className="text-xs text-muted-foreground">in</span>
+                    </div>
+                    <div className="w-px h-3 bg-border/60" />
+                    <div className="flex items-center gap-1">
+                      <ArrowDownRight className="w-3 h-3" style={{ color: "hsl(4 86% 58%)" }} />
+                      <span className="text-xs font-medium tabular-nums text-foreground">{card.expenses ?? "—"}</span>
+                      <span className="text-xs text-muted-foreground">out</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chevron */}
+              <ChevronRight
+                className={cn(
+                  "w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-200",
+                  isOpen && "rotate-90",
+                )}
+              />
+            </button>
+
+            {/* ── Expanded details ── */}
+            {isOpen && !card.isLoading && (
+              <div
+                className="px-5 pb-5 space-y-3 border-t border-border/40 pt-4 animate-fade-down"
+              >
+                {/* Top service + category */}
+                <div className="grid grid-cols-2 gap-3">
+                  {card.topService && (
+                    <div className="rounded-xl bg-muted/50 p-3">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                        Top Service
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                        <span className="text-sm font-semibold text-foreground truncate">{card.topService}</span>
+                      </div>
+                    </div>
+                  )}
+                  {card.topCategory && (
+                    <div className="rounded-xl bg-muted/50 p-3">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">
+                        Top Expense
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="w-3.5 h-3.5 text-danger flex-shrink-0" />
+                        <span className="text-sm font-semibold text-foreground capitalize truncate">{card.topCategory}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Highlights */}
+                {card.highlights && card.highlights.length > 0 && (
+                  <div className="space-y-1.5">
+                    {card.highlights.map((h, hi) => (
+                      <div key={hi} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="w-1 h-1 rounded-full bg-primary flex-shrink-0" />
+                        {h}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* View full report CTA */}
+                <button
+                  onClick={() => onNavigate(card.tab)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline mt-1"
+                >
+                  View full {card.label.toLowerCase()} report
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Loading expanded skeleton */}
+            {isOpen && card.isLoading && (
+              <div className="px-5 pb-5 pt-4 border-t border-border/40 space-y-2 animate-fade-down">
+                <Skeleton className="h-16 w-full rounded-xl" />
+                <Skeleton className="h-4 w-32 rounded" />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ============ DAILY REPORT VIEW ============
 const DailyReportView = ({ report }: { report: DailyReport }) => (
