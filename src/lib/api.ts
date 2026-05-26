@@ -133,6 +133,12 @@ export const authApi = {
       body: JSON.stringify(data),
     }),
 
+  googleLogin: (accessToken: string) =>
+    apiFetch<{ user: User; token: string }>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ accessToken }),
+    }),
+
   me: () => apiFetch<User>("/auth/me"),
 };
 
@@ -359,6 +365,7 @@ export interface User {
   email: string;
   username: string;
   fullName?: string;
+  avatarUrl?: string;
   isAdmin: boolean;
   createdAt?: string;
 }

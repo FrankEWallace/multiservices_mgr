@@ -1,30 +1,35 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGoogleLogin } from "@react-oauth/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
+import { cn } from "@/lib/utils";
+import { isOnboarded } from "./Onboarding";
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+const googleEnabled = !!GOOGLE_CLIENT_ID;
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [isLoading, setIsLoading]       = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  /* ── Email / password ── */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       await login(email, password);
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
-      });
+      toast({ title: "Welcome back!" });
       navigate("/");
     } catch (error) {
       toast({
@@ -37,47 +42,107 @@ export default function Login() {
     }
   };
 
+  /* ── Google OAuth ── */
+  const handleGoogleSuccess = async (accessToken: string) => {
+    setIsGoogleLoading(true);
+    try {
+      await loginWithGoogle(accessToken);
+      toast({ title: "Signed in with Google!" });
+      // New Google user → onboarding; existing → dashboard
+      navigate(isOnboarded() ? "/" : "/onboarding");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Google sign-in failed",
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: (tokenResponse) => handleGoogleSuccess(tokenResponse.access_token),
+    onError:   () => {
+      toast({
+        variant: "destructive",
+        title: "Google sign-in cancelled",
+        description: "Please try again or use email and password.",
+      });
+      setIsGoogleLoading(false);
+    },
+  });
+
+  const handleGoogleClick = () => {
+    if (!googleEnabled) return;
+    setIsGoogleLoading(true);
+    googleLogin();
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-4 relative overflow-hidden">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/20 to-black"></div>
-      
-      {/* Main content */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-900/20 to-black pointer-events-none" />
+
       <div className="relative z-10 w-full max-w-md mx-auto">
-        {/* Logo section */}
+        {/* Logo */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
             <div className="p-4 rounded-full bg-white">
               <Building2 className="w-12 h-12 text-black" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold mb-4">Millions of insights.</h1>
-          <h2 className="text-4xl font-bold mb-6">Free on Meilleur.</h2>
+          <h1 className="text-4xl font-bold mb-4" style={{ letterSpacing: "-0.03em" }}>
+            Millions of insights.
+          </h1>
+          <h2 className="text-4xl font-bold mb-6" style={{ letterSpacing: "-0.03em" }}>
+            Free on Meilleur.
+          </h2>
         </div>
 
-        {/* Social login buttons */}
-        <div className="space-y-4 mb-8">
+        {/* ── Google button ── */}
+        <div className="mb-8">
           <Button
-            variant="outline"
-            className="w-full h-14 bg-transparent border-gray-600 hover:bg-gray-800 text-white font-medium rounded-full flex items-center gap-3"
-            disabled
             type="button"
+            variant="outline"
+            onClick={handleGoogleClick}
+            disabled={isGoogleLoading || !googleEnabled}
+            className={cn(
+              "w-full h-14 bg-transparent border-gray-600 text-white font-medium rounded-full flex items-center gap-3 transition-all",
+              googleEnabled
+                ? "hover:bg-gray-800 hover:border-white cursor-pointer"
+                : "opacity-50 cursor-not-allowed",
+            )}
           >
-            <FaGoogle className="w-5 h-5" />
-            Continue with Google
-            <span className="ml-auto text-xs text-gray-500">Coming soon</span>
+            {isGoogleLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <FaGoogle className="w-5 h-5" />
+            )}
+            {isGoogleLoading ? "Signing in…" : "Continue with Google"}
+            {!googleEnabled && (
+              <span className="ml-auto text-xs text-gray-500">Setup required</span>
+            )}
           </Button>
+
+          {/* Dev hint when client ID is missing */}
+          {!googleEnabled && (
+            <p className="text-center text-xs text-gray-600 mt-2">
+              Set <code className="text-gray-400">VITE_GOOGLE_CLIENT_ID</code> in{" "}
+              <code className="text-gray-400">.env.local</code> to enable Google sign-in.
+            </p>
+          )}
         </div>
 
         {/* Divider */}
         <div className="relative mb-8">
-          <hr className="border-gray-600" />
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-4 text-gray-400 text-sm">
+          <hr className="border-gray-700" />
+          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-4 text-gray-500 text-sm">
             or
           </span>
         </div>
 
-        {/* Login form */}
+        {/* ── Email / password form ── */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
@@ -90,7 +155,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="h-12 bg-gray-900 border-gray-600 rounded-md text-white placeholder:text-gray-400 focus:border-white focus:ring-white"
+              className="h-12 bg-gray-900 border-gray-700 rounded-md text-white placeholder:text-gray-500 focus:border-white focus:ring-white"
             />
           </div>
           <div>
@@ -104,12 +169,12 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="h-12 bg-gray-900 border-gray-600 rounded-md text-white placeholder:text-gray-400 focus:border-white focus:ring-white"
+              className="h-12 bg-gray-900 border-gray-700 rounded-md text-white placeholder:text-gray-500 focus:border-white focus:ring-white"
             />
           </div>
-          <Button 
-            type="submit" 
-            className="w-full h-12 bg-green-500 hover:bg-green-600 text-black font-semibold rounded-full mt-6" 
+          <Button
+            type="submit"
+            className="w-full h-12 bg-green-500 hover:bg-green-600 text-black font-semibold rounded-full mt-6"
             disabled={isLoading}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -118,18 +183,20 @@ export default function Login() {
         </form>
 
         <div className="text-center mt-6">
-          <Link 
-            to="/forgot-password" 
+          <Link
+            to="/forgot-password"
             className="text-white hover:text-green-400 underline text-sm"
           >
             Forgot your password?
           </Link>
         </div>
 
-        {/* Sign up link */}
         <div className="text-center mt-8 pb-8">
           <span className="text-gray-400">Don't have an account? </span>
-          <Link to="/register" className="text-white hover:text-green-400 underline font-medium">
+          <Link
+            to="/register"
+            className="text-white hover:text-green-400 underline font-medium"
+          >
             Sign up for Meilleur
           </Link>
         </div>

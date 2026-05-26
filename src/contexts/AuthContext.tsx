@@ -6,6 +6,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (accessToken: string) => Promise<void>;
   register: (data: { email: string; username: string; password: string; fullName?: string }) => Promise<void>;
   logout: () => void;
 }
@@ -13,10 +14,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing token on mount
+  // Restore session on mount
   useEffect(() => {
     const checkAuth = async () => {
       const token = getAuthToken();
@@ -25,13 +26,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userData = await authApi.me();
           setUser(userData);
         } catch {
-          // Token invalid, clear it
           setAuthToken(null);
         }
       }
       setIsLoading(false);
     };
-
     checkAuth();
   }, []);
 
@@ -41,11 +40,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
   }, []);
 
-  const register = useCallback(async (data: { email: string; username: string; password: string; fullName?: string }) => {
-    const { user: userData, token } = await authApi.register(data);
+  const loginWithGoogle = useCallback(async (accessToken: string) => {
+    const { user: userData, token } = await authApi.googleLogin(accessToken);
     setAuthToken(token);
     setUser(userData);
   }, []);
+
+  const register = useCallback(
+    async (data: { email: string; username: string; password: string; fullName?: string }) => {
+      const { user: userData, token } = await authApi.register(data);
+      setAuthToken(token);
+      setUser(userData);
+    },
+    [],
+  );
 
   const logout = useCallback(() => {
     setAuthToken(null);
@@ -59,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         login,
+        loginWithGoogle,
         register,
         logout,
       }}

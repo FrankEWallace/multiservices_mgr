@@ -8,6 +8,8 @@ export const users = sqliteTable("users", {
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   fullName: text("full_name"),
+  googleId: text("google_id").unique(),          // set for Google OAuth users
+  avatarUrl: text("avatar_url"),                  // Google profile picture
   isActive: integer("is_active", { mode: "boolean" }).default(true),
   isAdmin: integer("is_admin", { mode: "boolean" }).default(false),
   createdAt: text("created_at").default("CURRENT_TIMESTAMP"),

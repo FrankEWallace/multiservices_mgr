@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 import { db } from "../db";
 import { users } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { authMiddleware, type AuthUser } from "../middleware/auth";
 
 const auth = new Hono<{ Variables: { user: AuthUser } }>();
@@ -142,6 +142,114 @@ auth.post("/login", async (c) => {
       return c.json({ error: "Validation error", details: error.errors }, 400);
     }
     throw error;
+  }
+});
+
+// ── Google OAuth ───────────────────────────────────────────────────────────────
+// Receives the Google access_token from the frontend (implicit flow).
+// Verifies it by calling Google's userinfo endpoint, then finds-or-creates
+// the local user record and returns a signed JWT — identical shape to /login.
+auth.post("/google", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { accessToken } = z.object({ accessToken: z.string().min(1) }).parse(body);
+
+    // ── 1. Verify with Google ──────────────────────────────────────────────
+    const googleRes = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`,
+    );
+
+    if (!googleRes.ok) {
+      return c.json({ error: "Invalid Google token" }, 401);
+    }
+
+    const googleUser = (await googleRes.json()) as {
+      sub: string;          // Google user ID
+      email: string;
+      email_verified: boolean;
+      name?: string;
+      given_name?: string;
+      picture?: string;
+    };
+
+    if (!googleUser.email || !googleUser.sub) {
+      return c.json({ error: "Could not retrieve profile from Google" }, 401);
+    }
+
+    // ── 2. Find existing user by googleId OR email ─────────────────────────
+    const existing = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.googleId, googleUser.sub), eq(users.email, googleUser.email)))
+      .limit(1);
+
+    let user = existing[0];
+
+    if (user) {
+      // Link googleId if not already set (e.g. pre-existing email account)
+      if (!user.googleId) {
+        await db
+          .update(users)
+          .set({ googleId: googleUser.sub, avatarUrl: googleUser.picture ?? null })
+          .where(eq(users.id, user.id));
+        user = { ...user, googleId: googleUser.sub };
+      }
+
+      if (!user.isActive) {
+        return c.json({ error: "Account is disabled" }, 403);
+      }
+    } else {
+      // ── 3. Create new user ───────────────────────────────────────────────
+      // Derive a safe username from email prefix; suffix with random digits if taken.
+      const baseUsername = googleUser.email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "").slice(0, 40) || "user";
+      const username     = `${baseUsername}${Math.floor(1000 + Math.random() * 9000)}`;
+
+      // Placeholder hash — Google users never need to log in with password.
+      const placeholderHash = await bcrypt.hash(crypto.randomUUID(), 10);
+
+      const created = await db
+        .insert(users)
+        .values({
+          email:        googleUser.email,
+          username,
+          passwordHash: placeholderHash,
+          fullName:     googleUser.name ?? googleUser.given_name ?? null,
+          googleId:     googleUser.sub,
+          avatarUrl:    googleUser.picture ?? null,
+        })
+        .returning();
+
+      user = created[0];
+    }
+
+    // ── 4. Sign JWT (same shape as /login) ────────────────────────────────
+    const token = await new SignJWT({
+      id:       user.id,
+      email:    user.email,
+      username: user.username,
+      isAdmin:  user.isAdmin,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("7d")
+      .sign(JWT_SECRET);
+
+    return c.json({
+      user: {
+        id:        user.id,
+        email:     user.email,
+        username:  user.username,
+        fullName:  user.fullName,
+        isAdmin:   user.isAdmin,
+        avatarUrl: user.avatarUrl,
+      },
+      token,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return c.json({ error: "Validation error", details: error.errors }, 400);
+    }
+    console.error("[/auth/google]", error);
+    return c.json({ error: "Authentication failed" }, 500);
   }
 });
 
