@@ -164,7 +164,6 @@ export const dashboardApi = {
   },
   getInsights: () => apiFetch<{ insights: Insight[] }>("/dashboard/insights"),
   getDebtSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"),
-  getDebtSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"),
   getGoalProgress: (filters?: { serviceId?: number }) => {
     const params = new URLSearchParams();
     if (filters?.serviceId) params.append('serviceId', filters.serviceId.toString());

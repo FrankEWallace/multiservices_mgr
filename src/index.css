@@ -241,6 +241,15 @@
 /* ─── Component Tokens ─────────────────────────────────────────────────────── */
 @layer utilities {
 
+  /* ── Scrollbar hide (used for horizontal chip scrollers) ── */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* ── Cards ── */
   .glass-card {
     @apply bg-card border border-border rounded-2xl;
