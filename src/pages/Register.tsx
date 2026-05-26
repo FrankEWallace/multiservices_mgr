@@ -54,7 +54,7 @@ export default function Register() {
         password: formData.password,
         fullName: formData.fullName || undefined,
       });
-      navigate("/");
+      navigate("/onboarding");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
     } finally {
