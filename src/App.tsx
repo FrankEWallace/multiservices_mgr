@@ -11,7 +11,7 @@ import Index from "./pages/Index";
 import Services from "./pages/Services";
 import Revenue from "./pages/Revenue";
 import Goals from "./pages/Goals";
-import Madeni from "./pages/Madeni";
+import Debts from "./pages/Debts";
 import Expenses from "./pages/Expenses";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -24,7 +24,14 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -82,8 +89,7 @@ const App = () => (
                 <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
                 <Route path="/revenue" element={<ProtectedRoute><Revenue /></ProtectedRoute>} />
                 <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
-                <Route path="/debts" element={<ProtectedRoute><Madeni /></ProtectedRoute>} />
-                <Route path="/madeni" element={<ProtectedRoute><Madeni /></ProtectedRoute>} />
+                <Route path="/debts" element={<ProtectedRoute><Debts /></ProtectedRoute>} />
                 <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />

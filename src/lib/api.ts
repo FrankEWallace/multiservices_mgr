@@ -164,7 +164,7 @@ export const dashboardApi = {
   },
   getInsights: () => apiFetch<{ insights: Insight[] }>("/dashboard/insights"),
   getDebtSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"),
-  getMadeniSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"), // Alias
+  getDebtSummary: () => apiFetch<{ summary: DebtSummary }>("/dashboard/debt-summary"),
   getGoalProgress: (filters?: { serviceId?: number }) => {
     const params = new URLSearchParams();
     if (filters?.serviceId) params.append('serviceId', filters.serviceId.toString());
@@ -305,8 +305,6 @@ export const debtsApi = {
     }),
 };
 
-// Keep madeniApi as alias for backwards compatibility
-export const madeniApi = debtsApi;
 
 // Goals API
 export const goalsApi = {
@@ -405,8 +403,6 @@ export interface DebtSummary {
   dueSoon: number;
 }
 
-// Keep MadeniSummary as alias for backwards compatibility
-export type MadeniSummary = DebtSummary;
 
 export interface GoalProgress {
   id: number;
@@ -540,8 +536,6 @@ export interface Debt {
   updatedAt?: string;
 }
 
-// Keep Madeni as alias for backwards compatibility
-export type Madeni = Debt;
 
 export interface DebtPayment {
   id: number;
@@ -554,8 +548,6 @@ export interface DebtPayment {
   createdAt?: string;
 }
 
-// Keep MadeniPayment as alias for backwards compatibility
-export type MadeniPayment = DebtPayment;
 
 export interface AgingReport {
   label: string;

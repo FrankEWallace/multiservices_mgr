@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { debtsApi, Debt } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MadeniForm, PaymentForm, ReminderDialog } from "@/components/forms";
+import { DebtForm, PaymentForm, ReminderDialog } from "@/components/forms";
 import { DeleteConfirmation } from "@/components/ui/delete-confirmation";
-import { exportToCSV, madeniExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
+import { exportToCSV, debtExportColumns, exportToPDF, generateTableHTML, generateSummaryHTML } from "@/lib/export";
 import { toast } from "sonner";
 import {
   Select,
@@ -24,20 +24,20 @@ import {
 import { Plus, Filter, Download, Phone, DollarSign, Edit2, Trash2, Send } from "lucide-react";
 import { useState } from "react";
 
-const Madeni = () => {
+const Debts = () => {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [paymentFormOpen, setPaymentFormOpen] = useState(false);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
-  const [editingMadeni, setEditingMadeni] = useState<Debt | null>(null);
-  const [paymentMadeni, setPaymentMadeni] = useState<Debt | null>(null);
-  const [reminderMadeni, setReminderMadeni] = useState<Debt | null>(null);
+  const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
+  const [paymentDebt, setPaymentDebt] = useState<Debt | null>(null);
+  const [reminderDebt, setReminderDebt] = useState<Debt | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingMadeni, setDeletingMadeni] = useState<Debt | null>(null);
+  const [deletingDebt, setDeletingDebt] = useState<Debt | null>(null);
 
-  const { data: madeniData, isLoading: madeniLoading } = useQuery({
+  const { data: debtsData, isLoading: debtsLoading } = useQuery({
     queryKey: ["debts"],
     queryFn: () => debtsApi.getAll(),
     staleTime: 30000,
@@ -49,36 +49,36 @@ const Madeni = () => {
     staleTime: 30000,
   });
 
-  const madenis = madeniData?.debts || [];
+  const debts = debtsData?.debts || [];
   const aging = agingData?.aging || [];
   const agingTotal = agingData?.total;
 
-  const filteredMadenis = madenis.filter((m) => {
-    const matchesStatus = statusFilter === "all" || m.status?.toLowerCase() === statusFilter;
-    const matchesSearch = !searchTerm || 
-      m.debtorName.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredDebts = debts.filter((d) => {
+    const matchesStatus = statusFilter === "all" || d.status?.toLowerCase() === statusFilter;
+    const matchesSearch = !searchTerm ||
+      d.debtorName.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
-  const totalOutstanding = madenis.reduce((sum, m) => sum + m.balance, 0);
+  const totalOutstanding = debts.reduce((sum, d) => sum + d.balance, 0);
 
-  const handleEdit = (madeni: Debt) => {
-    setEditingMadeni(madeni);
+  const handleEdit = (debt: Debt) => {
+    setEditingDebt(debt);
     setFormOpen(true);
   };
 
-  const handlePayment = (madeni: Debt) => {
-    setPaymentMadeni(madeni);
+  const handlePayment = (debt: Debt) => {
+    setPaymentDebt(debt);
     setPaymentFormOpen(true);
   };
 
-  const handleReminder = (madeni: Debt) => {
-    setReminderMadeni(madeni);
+  const handleReminder = (debt: Debt) => {
+    setReminderDebt(debt);
     setReminderDialogOpen(true);
   };
 
-  const handleDelete = (madeni: Debt) => {
-    setDeletingMadeni(madeni);
+  const handleDelete = (debt: Debt) => {
+    setDeletingDebt(debt);
     setDeleteDialogOpen(true);
   };
 
@@ -89,7 +89,7 @@ const Madeni = () => {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Debtor deleted successfully");
       setDeleteDialogOpen(false);
-      setDeletingMadeni(null);
+      setDeletingDebt(null);
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete debtor");
@@ -97,46 +97,46 @@ const Madeni = () => {
   });
 
   const confirmDelete = () => {
-    if (deletingMadeni) {
-      deleteMutation.mutate(deletingMadeni.id);
+    if (deletingDebt) {
+      deleteMutation.mutate(deletingDebt.id);
     }
   };
 
   const handleFormClose = (open: boolean) => {
     setFormOpen(open);
-    if (!open) setEditingMadeni(null);
+    if (!open) setEditingDebt(null);
   };
 
   const handleExportCSV = () => {
-    exportToCSV(filteredMadenis, madeniExportColumns, `debts_${new Date().toISOString().split("T")[0]}`);
+    exportToCSV(filteredDebts, debtExportColumns, `debts_${new Date().toISOString().split("T")[0]}`);
   };
 
   const handleExportPDF = () => {
-    const overdueCount = madenis.filter(m => m.status === "overdue").length;
+    const overdueCount = debts.filter(d => d.status === "overdue").length;
     const summaryItems = generateSummaryHTML([
-      { label: "Total Outstanding", value: `$${totalOutstanding.toLocaleString()}`, type: "danger" },
-      { label: "Total Debtors", value: madenis.length },
+      { label: "Total Outstanding", value: `${totalOutstanding.toLocaleString()}`, type: "danger" },
+      { label: "Total Debtors", value: debts.length },
       { label: "Overdue", value: overdueCount, type: overdueCount > 0 ? "danger" : "success" },
     ]);
-    const table = generateTableHTML(filteredMadenis, madeniExportColumns);
+    const table = generateTableHTML(filteredDebts, debtExportColumns);
     exportToPDF("Debt Report", `<h2>Summary</h2>${summaryItems}<h2>Debtors</h2>${table}`, "debt_report");
   };
 
   return (
     <DashboardLayout>
-      <MadeniForm open={formOpen} onOpenChange={handleFormClose} madeni={editingMadeni} />
-      <PaymentForm open={paymentFormOpen} onOpenChange={setPaymentFormOpen} madeni={paymentMadeni} />
-      <ReminderDialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen} debt={reminderMadeni} />
+      <DebtForm open={formOpen} onOpenChange={handleFormClose} debt={editingDebt} />
+      <PaymentForm open={paymentFormOpen} onOpenChange={setPaymentFormOpen} debt={paymentDebt} />
+      <ReminderDialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen} debt={reminderDebt} />
       <DeleteConfirmation
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={confirmDelete}
         title="Delete Debtor"
-        itemName={deletingMadeni?.debtorName}
-        description={`This will permanently delete "${deletingMadeni?.debtorName}" with a balance of $${deletingMadeni?.balance?.toLocaleString() || 0}. This action cannot be undone.`}
+        itemName={deletingDebt?.debtorName}
+        description={`This will permanently delete "${deletingDebt?.debtorName}" with a balance of ${deletingDebt?.balance?.toLocaleString() || 0}. This action cannot be undone.`}
         isLoading={deleteMutation.isPending}
       />
-      
+
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -173,8 +173,8 @@ const Madeni = () => {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="glass-card p-4">
               <p className="text-sm text-muted-foreground mb-1">Total Outstanding</p>
-              <p className="text-3xl font-bold text-foreground">${totalOutstanding.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground mt-1">{agingTotal?.count || madenis.length} debtors</p>
+              <p className="text-3xl font-bold text-foreground">{totalOutstanding.toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground mt-1">{agingTotal?.count || debts.length} debtors</p>
             </div>
             {aging.map((item, index) => (
               <div
@@ -191,7 +191,7 @@ const Madeni = () => {
                   item.color === "warning" ? "text-warning" :
                   item.color === "orange" ? "text-orange-500" : "text-danger"
                 }`}>
-                  ${(item.amount || 0).toLocaleString()}
+                  {(item.amount || 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">{item.count || 0} debtors</p>
               </div>
@@ -217,9 +217,9 @@ const Madeni = () => {
                 <SelectItem value="paid">Paid</SelectItem>
               </SelectContent>
             </Select>
-            <Input 
-              placeholder="Search debtor..." 
-              className="w-60 bg-secondary" 
+            <Input
+              placeholder="Search debtor..."
+              className="w-60 bg-secondary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -227,13 +227,13 @@ const Madeni = () => {
         </div>
 
         <div className="glass-card overflow-hidden">
-          {madeniLoading ? (
+          {debtsLoading ? (
             <div className="p-4 space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
-          ) : filteredMadenis.length === 0 ? (
+          ) : filteredDebts.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">No debtors found</div>
           ) : (
             <table className="data-table">
@@ -249,7 +249,7 @@ const Madeni = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredMadenis.map((debtor) => (
+                {filteredDebts.map((debtor) => (
                   <tr key={debtor.id}>
                     <td>
                       <div>
@@ -258,8 +258,8 @@ const Madeni = () => {
                       </div>
                     </td>
                     <td>{debtor.serviceName || "Unknown"}</td>
-                    <td className="text-right text-muted-foreground">${debtor.originalAmount.toLocaleString()}</td>
-                    <td className="text-right font-semibold text-danger">${debtor.balance.toLocaleString()}</td>
+                    <td className="text-right text-muted-foreground">{debtor.originalAmount.toLocaleString()}</td>
+                    <td className="text-right font-semibold text-danger">{debtor.balance.toLocaleString()}</td>
                     <td>{debtor.dueDate}</td>
                     <td>
                       <span className={
@@ -305,9 +305,9 @@ const Madeni = () => {
                           <Trash2 className="w-4 h-4" />
                         </button>
                         {debtor.debtorContact && (
-                          <a 
+                          <a
                             href={`tel:${debtor.debtorContact}`}
-                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary transition-colors" 
+                            className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary transition-colors"
                             title="Call"
                           >
                             <Phone className="w-4 h-4" />
@@ -326,4 +326,4 @@ const Madeni = () => {
   );
 };
 
-export default Madeni;
+export default Debts;

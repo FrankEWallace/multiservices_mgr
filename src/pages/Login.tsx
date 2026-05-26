@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Building2 } from "lucide-react";
-import { FaGoogle, FaApple, FaFacebook } from "react-icons/fa";
+import { FaGoogle } from "react-icons/fa";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -57,39 +57,15 @@ export default function Login() {
 
         {/* Social login buttons */}
         <div className="space-y-4 mb-8">
-          <Button 
-            variant="secondary" 
-            className="w-full h-14 bg-green-500 hover:bg-green-600 text-black font-semibold text-lg rounded-full border-0"
-            disabled
-          >
-            Sign up free
-          </Button>
-          
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full h-14 bg-transparent border-gray-600 hover:bg-gray-800 text-white font-medium rounded-full flex items-center gap-3"
             disabled
+            type="button"
           >
             <FaGoogle className="w-5 h-5" />
             Continue with Google
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full h-14 bg-transparent border-gray-600 hover:bg-gray-800 text-white font-medium rounded-full flex items-center gap-3"
-            disabled
-          >
-            <FaFacebook className="w-5 h-5 text-blue-500" />
-            Continue with Facebook
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full h-14 bg-transparent border-gray-600 hover:bg-gray-800 text-white font-medium rounded-full flex items-center gap-3"
-            disabled
-          >
-            <FaApple className="w-5 h-5" />
-            Continue with Apple
+            <span className="ml-auto text-xs text-gray-500">Coming soon</span>
           </Button>
         </div>
 
@@ -148,12 +124,6 @@ export default function Login() {
           >
             Forgot your password?
           </Link>
-        </div>
-
-        {/* Demo credentials */}
-        <div className="mt-8 p-4 bg-gray-900/50 rounded-lg text-center">
-          <p className="text-gray-400 text-sm">Demo credentials:</p>
-          <p className="text-gray-300 text-sm">admin@meilleur.com / admin123</p>
         </div>
 
         {/* Sign up link */}

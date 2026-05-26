@@ -190,7 +190,7 @@ export const revenueExportColumns = [
   { key: "description", header: "Description" },
 ];
 
-export const madeniExportColumns = [
+export const debtExportColumns = [
   { key: "debtorName", header: "Debtor Name" },
   { key: "debtorContact", header: "Contact" },
   { key: "serviceName", header: "Service" },

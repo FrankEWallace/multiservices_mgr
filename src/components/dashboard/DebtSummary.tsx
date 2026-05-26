@@ -2,10 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function MadeniSummary() {
+export function DebtSummary() {
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", "madeni-summary"],
-    queryFn: dashboardApi.getMadeniSummary,
+    queryKey: ["dashboard", "debt-summary"],
+    queryFn: dashboardApi.getDebtSummary,
     staleTime: 60000,
   });
 
@@ -19,7 +19,7 @@ export function MadeniSummary() {
           <Skeleton className="h-6 w-20" />
         ) : (
           <span className="text-lg font-bold text-foreground">
-            ${summary?.total?.toLocaleString() || 0}
+            {summary?.total?.toLocaleString() || 0}
           </span>
         )}
       </div>

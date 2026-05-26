@@ -133,7 +133,7 @@ export function DrillDownDialog({ open, onOpenChange, type, title, dateRange }: 
       case "expenses":
         return "/expenses";
       case "debt":
-        return "/madeni";
+        return "/debts";
       case "service":
         return "/services";
       default:

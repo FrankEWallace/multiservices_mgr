@@ -24,15 +24,15 @@ import {
 } from "@/components/ui/select";
 import { formatDateForInput } from "@/lib/date-utils";
 
-interface MadeniFormProps {
+interface DebtFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  madeni?: Debt | null;
+  debt?: Debt | null;
 }
 
-export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
+export function DebtForm({ open, onOpenChange, debt }: DebtFormProps) {
   const queryClient = useQueryClient();
-  const isEditing = !!madeni;
+  const isEditing = !!debt;
 
   const { data: servicesData } = useQuery({
     queryKey: ["services"],
@@ -42,32 +42,32 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
   const services = servicesData?.services || [];
 
   const [formData, setFormData] = useState({
-    serviceId: madeni?.serviceId?.toString() || "",
-    debtorName: madeni?.debtorName || "",
-    debtorContact: madeni?.debtorContact || "",
-    debtorEmail: madeni?.debtorEmail || "",
-    debtorAddress: madeni?.debtorAddress || "",
-    originalAmount: madeni?.originalAmount?.toString() || "",
-    issueDate: madeni?.issueDate || new Date().toISOString().split("T")[0],
-    dueDate: madeni?.dueDate || "",
-    notes: madeni?.notes || "",
+    serviceId: debt?.serviceId?.toString() || "",
+    debtorName: debt?.debtorName || "",
+    debtorContact: debt?.debtorContact || "",
+    debtorEmail: debt?.debtorEmail || "",
+    debtorAddress: debt?.debtorAddress || "",
+    originalAmount: debt?.originalAmount?.toString() || "",
+    issueDate: debt?.issueDate || new Date().toISOString().split("T")[0],
+    dueDate: debt?.dueDate || "",
+    notes: debt?.notes || "",
   });
 
   useEffect(() => {
-    if (madeni) {
+    if (debt) {
       setFormData({
-        serviceId: madeni.serviceId?.toString() || "",
-        debtorName: madeni.debtorName || "",
-        debtorContact: madeni.debtorContact || "",
-        debtorEmail: madeni.debtorEmail || "",
-        debtorAddress: madeni.debtorAddress || "",
-        originalAmount: madeni.originalAmount?.toString() || "",
-        issueDate: madeni.issueDate || new Date().toISOString().split("T")[0],
-        dueDate: madeni.dueDate || "",
-        notes: madeni.notes || "",
+        serviceId: debt.serviceId?.toString() || "",
+        debtorName: debt.debtorName || "",
+        debtorContact: debt.debtorContact || "",
+        debtorEmail: debt.debtorEmail || "",
+        debtorAddress: debt.debtorAddress || "",
+        originalAmount: debt.originalAmount?.toString() || "",
+        issueDate: debt.issueDate || new Date().toISOString().split("T")[0],
+        dueDate: debt.dueDate || "",
+        notes: debt.notes || "",
       });
     }
-  }, [madeni]);
+  }, [debt]);
 
   const createMutation = useMutation({
     mutationFn: debtsApi.create,
@@ -131,8 +131,8 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
       notes: formData.notes || undefined,
     };
 
-    if (isEditing && madeni) {
-      updateMutation.mutate({ id: madeni.id, data });
+    if (isEditing && debt) {
+      updateMutation.mutate({ id: debt.id, data });
     } else {
       createMutation.mutate(data);
     }
@@ -153,8 +153,8 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField 
-            label="Debtor Name" 
+          <FormField
+            label="Debtor Name"
             required
             helper="Full name of the individual or company"
           >
@@ -173,7 +173,7 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
                 id="debtorContact"
                 value={formData.debtorContact}
                 onChange={(e) => setFormData({ ...formData, debtorContact: e.target.value })}
-                placeholder="+255..."
+                placeholder="+1..."
               />
             </FormField>
 
@@ -197,7 +197,7 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
             />
           </FormField>
 
-          <FormField 
+          <FormField
             label="Related Service"
             helper="Which service does this debt relate to?"
           >
@@ -220,8 +220,8 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
           </FormField>
 
           <div className="grid grid-cols-3 gap-4">
-            <FormField 
-              label="Amount (TSh)" 
+            <FormField
+              label="Amount"
               required
               helper="Total debt amount"
             >
@@ -287,7 +287,7 @@ export function MadeniForm({ open, onOpenChange, madeni }: MadeniFormProps) {
 interface PaymentFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  madeni: Debt | null;
+  debt: Debt | null;
 }
 
 const paymentMethods = [
@@ -298,7 +298,7 @@ const paymentMethods = [
   { value: "check", label: "Check" },
 ];
 
-export function PaymentForm({ open, onOpenChange, madeni }: PaymentFormProps) {
+export function PaymentForm({ open, onOpenChange, debt }: PaymentFormProps) {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
@@ -315,7 +315,7 @@ export function PaymentForm({ open, onOpenChange, madeni }: PaymentFormProps) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["debts"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success(`Payment recorded. New balance: $${data.newBalance.toLocaleString()}`);
+      toast.success(`Payment recorded. New balance: ${data.newBalance.toLocaleString()}`);
       onOpenChange(false);
       resetForm();
     },
@@ -337,19 +337,19 @@ export function PaymentForm({ open, onOpenChange, madeni }: PaymentFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!madeni || !formData.amount) {
+    if (!debt || !formData.amount) {
       toast.error("Please enter a payment amount");
       return;
     }
 
     const amount = Number(formData.amount);
-    if (amount > madeni.balance) {
-      toast.error(`Payment amount cannot exceed balance ($${madeni.balance.toLocaleString()})`);
+    if (amount > debt.balance) {
+      toast.error(`Payment amount cannot exceed balance (${debt.balance.toLocaleString()})`);
       return;
     }
 
     paymentMutation.mutate({
-      id: madeni.id,
+      id: debt.id,
       data: {
         amount,
         paymentDate: formData.paymentDate,
@@ -358,7 +358,7 @@ export function PaymentForm({ open, onOpenChange, madeni }: PaymentFormProps) {
     });
   };
 
-  if (!madeni) return null;
+  if (!debt) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -366,7 +366,7 @@ export function PaymentForm({ open, onOpenChange, madeni }: PaymentFormProps) {
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
           <DialogDescription>
-            Recording payment for {madeni.debtorName}. Current balance: ${madeni.balance.toLocaleString()}
+            Recording payment for {debt.debtorName}. Current balance: {debt.balance.toLocaleString()}
           </DialogDescription>
         </DialogHeader>
 
@@ -374,26 +374,26 @@ export function PaymentForm({ open, onOpenChange, madeni }: PaymentFormProps) {
           <div className="p-3 bg-muted rounded-lg">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Original Amount:</span>
-              <span className="font-medium">${madeni.originalAmount.toLocaleString()}</span>
+              <span className="font-medium">{debt.originalAmount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Amount Paid:</span>
-              <span className="font-medium">${madeni.amountPaid.toLocaleString()}</span>
+              <span className="font-medium">{debt.amountPaid.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm font-semibold mt-1 pt-1 border-t">
               <span>Outstanding Balance:</span>
-              <span className="text-danger">${madeni.balance.toLocaleString()}</span>
+              <span className="text-danger">{debt.balance.toLocaleString()}</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Payment Amount ($) *</Label>
+              <Label htmlFor="amount">Payment Amount *</Label>
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
-                max={madeni.balance}
+                max={debt.balance}
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="0.00"

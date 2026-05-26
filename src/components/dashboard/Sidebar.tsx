@@ -27,7 +27,7 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Activity, label: "Activities", path: "/activities" },
   { icon: Building2, label: "Services", path: "/services" },
-  { icon: CreditCard, label: "Debts", path: "/madeni" },
+  { icon: CreditCard, label: "Debts", path: "/debts" },
   { icon: Target, label: "Goals", path: "/goals" },
   { icon: FileText, label: "Reports", path: "/reports" },
   { icon: Settings, label: "Settings", path: "/settings" },

@@ -36,7 +36,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "http://localhost:8080", 
       "http://localhost:5173", 
       "http://localhost:8082",
-      "http://192.168.100.111:5173", // Your Mac's IP for simulator
+      // Add your local IP here for simulator access, e.g.: "http://192.168.x.x:5173"
       "capacitor://localhost", // Capacitor iOS
       "ionic://localhost", // Ionic iOS
       "http://localhost", // iOS Simulator
@@ -117,7 +117,7 @@ const port = Number(process.env.PORT) || 3000;
 const host = process.env.HOST || "0.0.0.0"; // Listen on all network interfaces
 
 console.log(`🚀 Server running at http://localhost:${port}`);
-console.log(`📱 Accessible from network at http://192.168.100.111:${port}`);
+console.log(`📱 To access from a device, use your Mac's local IP: http://<your-ip>:${port}`);
 
 serve({
   fetch: app.fetch,
